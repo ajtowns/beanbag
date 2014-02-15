@@ -1,7 +1,57 @@
+#!/usr/bin/env python
+
+# Copyright (c) 2014 Red Hat, Inc.
+# Written by Anthony Towns <atowns@redhat.com>
+# GPLv2+
+
+"""Usage:
+
+>>> import beanbag
+>>> foo = beanbag.BeanBag("http://hostname/api/")
+
+To setup kerb auth:
+
+>>> import requests
+>>> session = requests.Session()
+>>> session.auth = beanbag.KerbAuth()
+>>> foo = beanbag.BeanBag("http://hostname/api/", session=session)
+
+To setup oauth auth:
+
+>>> from requests_oauth import OAuth1
+>>> session.auth = OAuth1( secrets )
+>>> foo = beanbag.BeanBag("http://hostname/api/", session=session)
+
+To do REST queries, then:
+
+>>> b = foo.resource(p1=3.14, p2=2.718)  # GET request
+>>> foo.resource( {"a": 3, "b": 7} )     # POST request
+>>> del foo.resource                     # DELETE request
+>>> foo.resource = {"a" : 7, "b": 3}     # PUT request
+
+You can chain paths as well:
+
+>>> print foo.bar.baz[3]["xyzzy"].q
+http://hostname/api/foo/bar/baz/3/xyzzy/q
+
+To do a request on a resource that requires a trailing slash:
+
+>>> print foo.bar._
+http://hostname/api/foo/bar/
+>>> print foo.bar[""]
+http://hostname/api/foo/bar/
+>>> print foo.bar["/"]
+http://hostname/api/foo/bar/
+>>> print foo["bar/"]
+http://hostname/api/foo/bar/
+>>> print foo.bar._.x == foo.bar.x
+True
+>>> print foo.bar["_"]
+http://hostname/api/foo/bar/_
+
+"""
 
 import requests
-import kerberos
-import time
 import urlparse
 
 try:
@@ -9,60 +59,35 @@ try:
 except ImportError:
     import simplejson as json
 
-class BeanBag(object):
-    """Class to make accessing REST APIs feel pythonic"""
+__all__ = ['BeanBag', 'BeanBagException', 'BeanBagRequest', 'KerbAuth']
 
-    def __init__(self, base_url):
-        self._request = BeanBagRequest(base_url)
-        self._bb = BeanBagSub(self._request, "") 
+class BeanBagPath(object):
+    __slots__ = ("__bbr", "__path")
 
-    def __getattr__(self, attr):
-        return getattr(self._bb, attr)
-
-    def __setattr__(self, attr, val):
-        if attr[0] == "_" or hasattr(self, attr):
-            return super(BeanBag, self).__setattr__(attr, val)
-        else:
-            return self._bb.__setattr__(attr, val)
-
-    def __delattr__(self, attr):
-        return self._bb.__delattr__(attr)
-    
-    def __getitem__(self, attr):
-        return self._bb.__getitem__(attr)
-
-    def __setitem__(self, attr, val):
-        return self._bb.__setitem__(attr, val)
-
-    def __delitem__(self, attr):
-        return self._bb.__delitem__(attr)
-
-    def __call__(self, *args, **kwargs):
-        return self._bb(*args, **kwargs)
-
-class BeanBagSub(object):
     def __init__(self, bbr, path):
         self.__bbr = bbr
         self.__path = path
 
     def __getattr__(self, attr):
+        if attr == "_": attr = "/"
         return self.__getitem__(attr)
 
     def __setattr__(self, attr, val):
-        if attr.startswith("_BeanBagSub__"):
-            return super(BeanBagSub, self).__setattr__(attr, val)
+        if attr == "_": attr = "/"
+        if attr.startswith("_BeanBagPath__"):
+            return super(BeanBagPath, self).__setattr__(attr, val)
         return self.__setitem__(attr, val)
 
     def __delattr__(self, attr):
         return self.__delitem__(attr)
 
     def __getitem__(self, item):
-        item = str(item).strip("/")
+        item = str(item).lstrip("/")
         if self.__path == "":
             newpath = item
         else:
             newpath = self.__path.rstrip("/") + "/" + item
-        return BeanBagSub(self.__bbr, newpath)
+        return BeanBagPath(self.__bbr, newpath)
 
     def __setitem__(self, attr, val):
         return self[attr]("PUT", val)
@@ -86,70 +111,69 @@ class BeanBagSub(object):
 
         return self.__bbr.make_request(verb, self.__path, kwargs, body)
 
-    def _url(self):
-        return self.__bbr.base_url + self.__path
+    def __eq__(self, other):
+        if isinstance(other, BeanBagPath) and self.__bbr is other.__bbr:
+            return str(self) == str(other)
+        else:
+            return False
+
+    def __str__(self):
+        return self.__bbr.path2url(self.__path)
+
+    def __repr__(self):
+        return "<%s(%s)>" % (type(self).__name__, str(self))
 
 class BeanBagRequest(object):
-    def __init__(self, base_url):
+    content_type = "application/json"
+    def encode(self, obj):
+        return json.dumps(obj)
+    def decode(self, req):
+        return req.json()
+
+    def __init__(self, session, base_url, ext):
         self.base_url = base_url.rstrip("/") + "/"
+        self.ext = ext
 
-        self.content_types = ["application/json", "test/json"]
-        self.session = requests.Session()
-        self.session.headers["accept"] = "application/json"
-        self.session.headers["content-type"] = "application/json"
+        self.session = session
 
-        self.__kerb_auth_header = None
-        self.__kerb_auth_time = None
+        self.session.headers["accept"] = self.content_type
+        self.session.headers["content-type"] = self.content_type
 
-    @property
-    def hostname(self):
-        return urlparse.urlparse(self.base_url).hostname
 
-    def __kerb_auth(self):
-        if not self.__kerb_auth_header or \
-                (time.time() - self.__kerb_auth_time) > 300:
-            service = "HTTP@" + self.hostname
-            try:
-                rc, vc = kerberos.authGSSClientInit(service);
-            except kerberos.GSSError, e:
-                raise kerberos.GSSError(e)
-            try:
-                kerberos.authGSSClientStep(vc, "");
-            except kerberos.GSSError, e:
-                raise kerberos.GSSError(e)
-            self.__kerb_auth_header = \
-                    "negotiate %s" % kerberos.authGSSClientResponse(vc)
-            self.__kerb_auth_time = time.time()
-        self.session.headers['Authorization'] = self.__kerb_auth_header
-
-    def set_sslcert(self, cabundle):
-        if cabundle is None:
-            self.session.verify = False
-        else:
-            self.session.verify = cabundle
+    def path2url(self, path):
+        return self.base_url + path + self.ext
 
     def make_request(self, verb, path, params, body):
-        path = self.base_url + path
-
-        self.__kerb_auth()
+        path = self.path2url(path)
 
         if body is not None:
-            body = json.dumps(body)
+            body = self.encode(body)
+
         r = self.session.request(verb, path, params=params, data=body)
+
         if r.status_code > 200 or r.status_code >= 300:
             raise BeanBagException( "Bad response code: %d %s" 
                                       % (r.status_code, r.reason),
                                     r, (verb, path, params, body))
 
-        if r.headers["content-type"].split(";",1)[0] in self.content_types:
-            return r.json()
+        if r.headers["content-type"].split(";",1)[0] == self.content_type:
+            return self.decode(r)
 
         else:
             raise BeanBagException("Non-JSON response (Content-Type: %s)" 
                                      % (r.headers["content-type"],), 
                                    r, (verb, path, params, body))
 
+class BeanBag(BeanBagPath):
+    def __init__(self, base_url, ext = "", session = None, 
+                 BBRequest=BeanBagRequest):
+        if session is None:
+            session = requests.Session()
+        bbr = BBRequest(session, base_url, ext=ext)
+        super(BeanBag, self).__init__(bbr, "")
+
 class BeanBagException(Exception):
+    __slots__ = ('msg', 'response', 'request')
     def __init__(self, msg, response, request):
         self.msg = msg
         self.response = response
@@ -159,4 +183,27 @@ class BeanBagException(Exception):
         return self.msg
     def __str__(self):
         return self.msg
+
+class KerbAuth(object):
+    def __init__(self):
+        import time
+        import kerberos
+
+        self.header_cache = {}
+        self.timeout = 300
+
+        self.time = time.time
+        self.kerberos = kerberos
+
+    def __call__(self, r):
+        hostname = urlparse.urlparse(r.url).hostname
+        header, last = self.header_cache.get(hostname, (None, None))
+        if not header or (self.time() - last) > self.timeout:
+            service = "HTTP@" + hostname
+            rc, vc = self.kerberos.authGSSClientInit(service);
+            self.kerberos.authGSSClientStep(vc, "");
+            header = "negotiate %s" % self.kerberos.authGSSClientResponse(vc)
+            last = time.time()
+            self.header_cache[hostname] = (header, last)
+        r.headers['Authorization'] = header
 
