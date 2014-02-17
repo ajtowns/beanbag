@@ -63,7 +63,9 @@ try:
 except ImportError:
     import simplejson as json
 
-__all__ = ['BeanBag', 'BeanBagException', 'BeanBagRequest', 'KerbAuth']
+__all__ = ['BeanBag', 'BeanBagException',
+           'BeanBagRequest',
+           'KerbAuth', 'OAuth10aDance']
 
 class BeanBagPath(object):
     __slots__ = ("__bbr", "__path")
