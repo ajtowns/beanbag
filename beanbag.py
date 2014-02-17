@@ -203,7 +203,7 @@ class KerbAuth(object):
         import kerberos
 
         self.header_cache = {}
-        self.timeout = 300
+        self.timeout = 180
 
         self.time = time.time
         self.kerberos = kerberos
