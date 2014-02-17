@@ -91,10 +91,10 @@ class BeanBagPath(object):
 
     def __setitem__(self, attr, val):
         return self[attr]("PUT", val)
-    
+
     def __delitem__(self, attr):
         return self[attr]("DELETE", None)
-    
+
     def __iadd__(self, val):
         return self("PATCH", val)
 
@@ -106,7 +106,7 @@ class BeanBagPath(object):
         elif len(args) == 2:
             verb, body = args
         else:
-            raise TypeError("__call__ expected up to 2 arguments, got %d" 
+            raise TypeError("__call__ expected up to 2 arguments, got %d"
                      % (len(args)))
 
         return self.__bbr.make_request(verb, self.__path, kwargs, body)
@@ -139,7 +139,6 @@ class BeanBagRequest(object):
         self.session.headers["accept"] = self.content_type
         self.session.headers["content-type"] = self.content_type
 
-
     def path2url(self, path):
         return self.base_url + path + self.ext
 
@@ -152,7 +151,7 @@ class BeanBagRequest(object):
         r = self.session.request(verb, path, params=params, data=body)
 
         if r.status_code > 200 or r.status_code >= 300:
-            raise BeanBagException( "Bad response code: %d %s" 
+            raise BeanBagException( "Bad response code: %d %s"
                                       % (r.status_code, r.reason),
                                     r, (verb, path, params, body))
 
@@ -160,12 +159,12 @@ class BeanBagRequest(object):
             return self.decode(r)
 
         else:
-            raise BeanBagException("Non-JSON response (Content-Type: %s)" 
-                                     % (r.headers["content-type"],), 
+            raise BeanBagException("Non-JSON response (Content-Type: %s)"
+                                     % (r.headers["content-type"],),
                                    r, (verb, path, params, body))
 
 class BeanBag(BeanBagPath):
-    def __init__(self, base_url, ext = "", session = None, 
+    def __init__(self, base_url, ext = "", session = None,
                  BBRequest=BeanBagRequest):
         if session is None:
             session = requests.Session()
