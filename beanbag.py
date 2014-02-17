@@ -64,7 +64,6 @@ except ImportError:
     import simplejson as json
 
 __all__ = ['BeanBag', 'BeanBagException',
-           'BeanBagRequest',
            'KerbAuth', 'OAuth10aDance']
 
 class BeanBagPath(object):
@@ -130,15 +129,13 @@ class BeanBagPath(object):
         return "<%s(%s)>" % (type(self).__name__, str(self))
 
 class BeanBagRequest(object):
-    content_type = "application/json"
-    def encode(self, obj):
-        return json.dumps(obj)
-    def decode(self, req):
-        return req.json()
-
-    def __init__(self, session, base_url, ext):
+    def __init__(self, session, base_url, ext, content_type, encode, decode):
         self.base_url = base_url.rstrip("/") + "/"
         self.ext = ext
+
+        self.content_type = content_type
+        self.encode = encode
+        self.decode = decode
 
         self.session = session
 
@@ -170,11 +167,22 @@ class BeanBagRequest(object):
                                    r, (verb, path, params, body))
 
 class BeanBag(BeanBagPath):
+    __slots__ = ()
     def __init__(self, base_url, ext = "", session = None,
-                 BBRequest=BeanBagRequest):
+                 fmt='json'):
         if session is None:
             session = requests.Session()
-        bbr = BBRequest(session, base_url, ext=ext)
+
+        if fmt == 'json':
+            content_type = "application/json"
+            encode = json.dumps
+            decode = lambda req: req.json()
+        else:
+            content_type, encode, decode = fmt
+
+        bbr = BeanBagRequest(session, base_url, ext=ext,
+                content_type=content_type, encode=encode, decode=decode)
+
         super(BeanBag, self).__init__(bbr, "")
 
 class BeanBagException(Exception):
