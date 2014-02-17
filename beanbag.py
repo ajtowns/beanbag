@@ -221,14 +221,12 @@ class KerbAuth(object):
         r.headers['Authorization'] = header
 
 class OAuth10aDance(object):
-    req_token = None
-    authorize = None
-    acc_token = None
-
-    client_key = None
-    client_secret = None
-    user_key = None
-    user_secret = None
+    __slots__ = [
+            'req_token', 'authorize', 'acc_token',  # oauth resource URLs
+            'client_key', 'client_secret',          # client creds
+            'user_key', 'user_secret',              # user creds
+            'OAuth1'                                # OAuth1 module ref
+            ]
 
     def __init__(self,
                  req_token=None, acc_token=None, authorize=None,
@@ -238,9 +236,12 @@ class OAuth10aDance(object):
         self.OAuth1 = OAuth1
 
         # override instance variables based on parameters
-        for s, v in locals().iteritems():
-            if hasattr(self, s) and v is not None:
-                setattr(self, s, v)
+        for s in self.__slots__:
+            u = locals().get(s, None)
+            if u is not None:
+                setattr(self, s, u)
+            elif not hasattr(self, s):
+                setattr(self, s, None)
 
     def get_auth_url(self):
         oauth = self.OAuth1(self.client_key, client_secret = self.client_secret)
