@@ -2,8 +2,6 @@
 
 import beanbag
 import requests
-from requests_oauthlib import OAuth1
-from urlparse import parse_qs
 
 class OAuthDanceTwitter(beanbag.OAuth10aDance):
     req_token = "https://api.twitter.com/oauth/request_token"
@@ -13,12 +11,12 @@ class OAuthDanceTwitter(beanbag.OAuth10aDance):
 client_key, client_secret = (None, None)
 user_key, user_secret = (None, None)
 
-session = requests.Session()
-
 oauthDance = OAuthDanceTwitter(
         client_key=client_key, client_secret=client_secret,
         user_key=user_key, user_secret=user_secret)
 oauthDance.ensure_creds(interactive=True)
+
+session = requests.Session()
 session.auth = oauthDance.oauth()
 
 twitter = beanbag.BeanBag("https://api.twitter.com/1.1/", ext=".json",
