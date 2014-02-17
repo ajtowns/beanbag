@@ -19,15 +19,19 @@ To setup kerb auth:
 To setup oauth auth:
 
 >>> from requests_oauth import OAuth1
->>> session.auth = OAuth1( secrets )
+>>> session.auth = OAuth1( consumer creds, user creds )
 >>> foo = beanbag.BeanBag("http://hostname/api/", session=session)
+
+See the "twitter_example" file for an example that takes care of requesting
+OAuth user (resource owner) credentials.
 
 To do REST queries, then:
 
->>> b = foo.resource(p1=3.14, p2=2.718)  # GET request
->>> foo.resource( {"a": 3, "b": 7} )     # POST request
+>>> r = foo.resource(p1=3.14, p2=2.718)  # GET request
+>>> r = foo.resource( {"a": 3, "b": 7} ) # POST request
 >>> del foo.resource                     # DELETE request
 >>> foo.resource = {"a" : 7, "b": 3}     # PUT request
+>>> foo.resource += {"a" : 7, "b": 3}    # PATCH request
 
 You can chain paths as well:
 
