@@ -284,23 +284,36 @@ class BeanBagRequest(object):
     def make_request(self, verb, path, params, body):
         path = self.path2url(path)
 
-        if body is not None:
-            body = self.encode(body)
+        if body is None:
+            ebody = None
+        else:
+            try:
+                ebody = self.encode(body)
+            except:
+                raise BeanBagException("Could not encode request body",
+                        None, (body,))
 
-        r = self.session.request(verb, path, params=params, data=body)
+        r = self.session.request(verb, path, params=params, data=ebody)
 
         if r.status_code < 200 or r.status_code >= 300:
             raise BeanBagException( "Bad response code: %d %s"
                                       % (r.status_code, r.reason),
-                                    r, (verb, path, params, body))
+                                    r, (verb, path, params, ebody))
 
-        if r.headers["content-type"].split(";",1)[0] == self.content_type:
-            return self.decode(r)
+        if r.content == "":
+            return None
+
+        elif r.headers.get("content-type", self.content_type).split(";",1)[0] == self.content_type:
+            try:
+                return self.decode(r)
+            except:
+                raise BeanBagException("Could not decode response",
+                        r, (verb, path, params, ebody))
 
         else:
-            raise BeanBagException("Non-JSON response (Content-Type: %s)"
+            raise BeanBagException("Bad content-type in response (Content-Type: %s)"
                                      % (r.headers["content-type"],),
-                                   r, (verb, path, params, body))
+                                   r, (verb, path, params, ebody))
 
 class BeanBagException(Exception):
     """Exception thrown when a BeanBag request fails.
