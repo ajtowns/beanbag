@@ -290,7 +290,7 @@ class BeanBagRequest(object):
 
         r = self.session.request(verb, path, params=params, data=body)
 
-        if r.status_code > 200 or r.status_code >= 300:
+        if r.status_code < 200 or r.status_code >= 300:
             raise BeanBagException( "Bad response code: %d %s"
                                       % (r.status_code, r.reason),
                                     r, (verb, path, params, body))
