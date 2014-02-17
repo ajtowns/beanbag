@@ -21,26 +21,12 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
 # THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-"""Usage:
+"""Helper module for accessing REST interfaces
+
+Setup:
 
 >>> import beanbag
 >>> foo = beanbag.BeanBag("http://hostname/api/")
-
-To setup kerb auth:
-
->>> import requests
->>> session = requests.Session()
->>> session.auth = beanbag.KerbAuth()
->>> foo = beanbag.BeanBag("http://hostname/api/", session=session)
-
-To setup oauth auth:
-
->>> from requests_oauth import OAuth1
->>> session.auth = OAuth1( consumer creds, user creds )
->>> foo = beanbag.BeanBag("http://hostname/api/", session=session)
-
-See the "twitter_example" file for an example that takes care of requesting
-OAuth user (resource owner) credentials.
 
 To do REST queries, then:
 
@@ -69,6 +55,30 @@ http://hostname/api/foo/bar/
 True
 >>> print foo.bar["_"]
 http://hostname/api/foo/bar/_
+
+To access REST interfaces that require authentication, you need to
+specify a session object. BeanBag supplies helpers to make Kerberos
+and OAuth 1.0a authentication easier.
+
+To setup kerberos auth:
+
+>>> import requests
+>>> session = requests.Session()
+>>> session.auth = beanbag.KerbAuth()
+>>> foo = beanbag.BeanBag("http://hostname/api/", session=session)
+
+To setup oauth using OAuth1 directly:
+
+>>> import requests
+>>> from requests_oauth import OAuth1
+>>> session = requests.Session()
+>>> session.auth = OAuth1( consumer creds, user creds )
+>>> foo = beanbag.BeanBag("http://hostname/api/", session=session)
+
+To setup oauth using beanbag's OAuth10aDance helper (which will
+generate the authentication url and construct user credentials from the
+verification token supplied when the auth url is visited in a browser),
+see the twitter_example script.
 
 """
 
@@ -325,7 +335,8 @@ class KerbAuth(object):
        for a period of 180 seconds (.timeout member).
 
        Usage:
-       >>> session = requests.Session(auth=KerbAuth())
+       >>> session = requests.Session()
+       >>> session.auth = KerbAuth()
     """
 
     def __init__(self):
