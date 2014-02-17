@@ -224,7 +224,6 @@ class BeanBagPath(object):
            >>> x += {"op": "replace", "path": "/a", "value": 3}
         """
 
-        return self[attr]("DELETE", None)
         return self("PATCH", val)
 
     def __eq__(self, other):
