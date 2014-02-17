@@ -207,3 +207,76 @@ class KerbAuth(object):
             self.header_cache[hostname] = (header, last)
         r.headers['Authorization'] = header
 
+class OAuth10aDance(object):
+    req_token = None
+    authorize = None
+    acc_token = None
+
+    client_key = None
+    client_secret = None
+    user_key = None
+    user_secret = None
+
+    def __init__(self,
+                 req_token=None, acc_token=None, authorize=None,
+                 client_key=None, client_secret=None,
+                 user_key=None, user_secret=None):
+        from requests_oauthlib import OAuth1
+        self.OAuth1 = OAuth1
+
+        # override instance variables based on parameters
+        for s, v in locals().iteritems():
+            if hasattr(self, s) and v is not None:
+                setattr(self, s, v)
+
+    def get_auth_url(self):
+        oauth = self.OAuth1(self.client_key, client_secret = self.client_secret)
+        r = requests.post(url=self.req_token, auth=oauth)
+        credentials = urlparse.parse_qs(r.content)
+
+        self.user_key = credentials.get('oauth_token', [""])[0]
+        self.user_secret = credentials.get('oauth_token_secret', [""])[0]
+
+        return self.authorize + '?oauth_token=' + self.user_key
+
+    def verify(self, verifier):
+        oauth = self.OAuth1(self.client_key,
+                       client_secret=self.client_secret,
+                       resource_owner_key=self.user_key,
+                       resource_owner_secret=self.user_secret,
+                       verifier=verifier)
+        r = requests.post(url=self.acc_token, auth=oauth)
+        credentials = urlparse.parse_qs(r.content)
+
+        self.user_key = credentials.get('oauth_token', [""])[0]
+        self.user_secret = credentials.get('oauth_token_secret', [""])[0]
+
+    def ensure_creds(self, interactive):
+        if not interactive:
+            assert self.client_key and self.client_secret
+            assert self.user_key and self.user_secret
+            return
+
+        if not self.client_key:
+            self.client_key = raw_input('Please input client key: ')
+        if not self.client_secret:
+            self.client_secret = raw_input('Please input client secret: ')
+
+        if self.user_key and self.user_secret:
+            return
+
+        assert self.req_token and self.acc_token and self.authorize
+
+        print 'Please go to url:\n  %s' % (self.get_auth_url(),)
+        verifier = raw_input('Please input the verifier: ')
+        self.verify(verifier)
+
+        print 'User key: %s\nUser secret: %s' % (self.user_key,
+                                                 self.user_secret)
+
+    def oauth(self):
+        return self.OAuth1(self.client_key,
+                           client_secret = self.client_secret,
+                           resource_owner_key = self.user_key,
+                           resource_owner_secret = self.user_secret)
+
