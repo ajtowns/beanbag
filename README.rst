@@ -9,10 +9,9 @@ an XML-RPC API, and ideally no harder than calling a local API.
 It uses the wonderful ``requests`` module, which is the only sensible way
 to talk to the web from python.
 
-It's heavily inspired by Kadir Pekel's Hammock, though sadly only shares a
-license, and not any actual code. Hammock is available from:
-
-  https://github.com/kadirpekel/hammock
+It's heavily inspired by Kadir Pekel's Hammock, though sadly only
+shares a license, and not any actual code. Hammock is available from
+`https://github.com/kadirpekel/hammock`.
 
 Proof
 -----
