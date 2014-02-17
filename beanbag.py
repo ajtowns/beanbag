@@ -73,20 +73,39 @@ class BeanBagPath(object):
         self.__bbr = bbr
         self.__path = path
 
+    def __repr__(self):
+        return "<%s(%s)>" % (type(self).__name__, str(self))
+
+    def __str__(self):
+        """Obtain the URL of a resource"""
+        return self.__bbr.path2url(self.__path)
+
     def __getattr__(self, attr):
+        """Refer to a subresource.
+
+           Example:
+           >>> x = BeanBag("http://host/api")
+           >>> print x.myresource
+           http://host/api/myresource
+           >>> print x.myresource._
+           http://host/api/myresource/
+        """
+
         if attr == "_": attr = "/"
         return self.__getitem__(attr)
 
-    def __setattr__(self, attr, val):
-        if attr == "_": attr = "/"
-        if attr.startswith("_BeanBagPath__"):
-            return super(BeanBagPath, self).__setattr__(attr, val)
-        return self.__setitem__(attr, val)
-
-    def __delattr__(self, attr):
-        return self.__delitem__(attr)
-
     def __getitem__(self, item):
+        """Refer to a subresource.
+
+           Example:
+           >>> x = BeanBag("http://host/api")
+           >>> y = "myresource"
+           >>> print x[y]
+           http://host/api/myresource
+           >>> print x[y+"/"]
+           http://host/api/myresource/
+        """
+
         item = str(item).lstrip("/")
         if self.__path == "":
             newpath = item
@@ -94,16 +113,28 @@ class BeanBagPath(object):
             newpath = self.__path.rstrip("/") + "/" + item
         return BeanBagPath(self.__bbr, newpath)
 
-    def __setitem__(self, attr, val):
-        return self[attr]("PUT", val)
-
-    def __delitem__(self, attr):
-        return self[attr]("DELETE", None)
-
-    def __iadd__(self, val):
-        return self("PATCH", val)
-
     def __call__(self, *args, **kwargs):
+        """Make a GET, POST or generic request to a resource.
+
+           Example:
+           >>> x = BeanBag("http://host/api")
+
+           GET request:
+           >>> r = x()
+
+           GET request with parameters passed via query string
+           >>> r = x(p1='foo', p2=3)
+
+           POST request:
+           >>> r = x( {'a': 1, 'b': 2} )
+
+           Custom HTTP verb with request body:
+           >>> r = x( "RANDOMIZE", {'a': 1, 'b': 2} )
+
+           Custom HTTP verb with empty request body:
+           >>> r = x( "OPTIONS", None )
+        """
+
         if len(args) == 0:
             verb, body = "GET", None
         elif len(args) == 1:
@@ -113,20 +144,99 @@ class BeanBagPath(object):
         else:
             raise TypeError("__call__ expected up to 2 arguments, got %d"
                      % (len(args)))
-
         return self.__bbr.make_request(verb, self.__path, kwargs, body)
 
+    def __setattr__(self, attr, val):
+        """Make a PUT request to a subresource.
+
+           Example:
+           >>> x = BeanBag("http://host/api")
+           >>> x.res = {"a": 1}
+        """
+
+        if attr == "_": attr = "/"
+        if attr.startswith("_BeanBagPath__"):
+            return super(BeanBagPath, self).__setattr__(attr, val)
+        return self.__setitem__(attr, val)
+
+    def __setitem__(self, attr, val):
+        """Make a PUT request to a subresource.
+
+           Example:
+           >>> x = BeanBag("http://host/api")
+           >>> x["res"] = {"a": 1}
+        """
+
+        return self[attr]("PUT", val)
+
+    def __delattr__(self, attr):
+        """Make a DELETE request to a subresource.
+
+           Example:
+           >>> x = BeanBag("http://host/api")
+           >>> del x.res
+        """
+
+        return self.__delitem__(attr)
+
+    def __delitem__(self, attr):
+        """Make a DELETE request to a subresource.
+
+           Example:
+           >>> x = BeanBag("http://host/api")
+           >>> del x["res"]
+        """
+
+        return self[attr]("DELETE", None)
+
+    def __iadd__(self, val):
+        """Make a PATCH request to a resource.
+
+           Example:
+           >>> x = BeanBag("http://host/api")
+           >>> x += {"op": "replace", "path": "/a", "value": 3}
+        """
+
+        return self[attr]("DELETE", None)
+        return self("PATCH", val)
+
     def __eq__(self, other):
+        """Compare two resource references."""
         if isinstance(other, BeanBagPath) and self.__bbr is other.__bbr:
             return str(self) == str(other)
         else:
             return False
 
-    def __str__(self):
-        return self.__bbr.path2url(self.__path)
+class BeanBag(BeanBagPath):
+    __slots__ = ()
+    def __init__(self, base_url, ext = "", session = None,
+                 fmt='json'):
+        """Create a BeanBag reference a base REST path.
 
-    def __repr__(self):
-        return "<%s(%s)>" % (type(self).__name__, str(self))
+           Parameters:
+               base_url: the base URL prefix for all resources
+               ext: extension to add to resource URLs, eg ".json"
+               session: requests.Session instance used for this API. Useful
+                  to set an auth procedure, or change verify parameter.
+               fmt: either 'json' for json data, or a tuple specifying a
+                  content-type string, encode function (for encoding the
+                  request body) and a decode function (for decoding responses)
+        """
+
+        if session is None:
+            session = requests.Session()
+
+        if fmt == 'json':
+            content_type = "application/json"
+            encode = json.dumps
+            decode = lambda req: req.json()
+        else:
+            content_type, encode, decode = fmt
+
+        bbr = BeanBagRequest(session, base_url, ext=ext,
+                content_type=content_type, encode=encode, decode=decode)
+
+        super(BeanBag, self).__init__(bbr, "")
 
 class BeanBagRequest(object):
     def __init__(self, session, base_url, ext, content_type, encode, decode):
@@ -166,38 +276,41 @@ class BeanBagRequest(object):
                                      % (r.headers["content-type"],),
                                    r, (verb, path, params, body))
 
-class BeanBag(BeanBagPath):
-    __slots__ = ()
-    def __init__(self, base_url, ext = "", session = None,
-                 fmt='json'):
-        if session is None:
-            session = requests.Session()
-
-        if fmt == 'json':
-            content_type = "application/json"
-            encode = json.dumps
-            decode = lambda req: req.json()
-        else:
-            content_type, encode, decode = fmt
-
-        bbr = BeanBagRequest(session, base_url, ext=ext,
-                content_type=content_type, encode=encode, decode=decode)
-
-        super(BeanBag, self).__init__(bbr, "")
-
 class BeanBagException(Exception):
+    """Exception thrown when a BeanBag request fails.
+
+       Data members:
+          msg      -- exception string, brief and human readable
+          request  -- original request object
+          response -- response object
+
+       Use request and response fields for debugging.
+    """
+
     __slots__ = ('msg', 'response', 'request')
+
     def __init__(self, msg, response, request):
+        """Create a BeanBagException"""
+
         self.msg = msg
         self.response = response
         self.request = request
 
     def __repr__(self):
-        return self.msg
+        return "%s(%s,...)" % (self.__class__.__name__, self.msg)
     def __str__(self):
         return self.msg
 
 class KerbAuth(object):
+    """Helper class for basic Kerberos authentication using requests
+       library. A single instance can be used for multiple sites. Each
+       request to the same site will use the same authorization token
+       for a period of 180 seconds (.timeout member).
+
+       Usage:
+       >>> session = requests.Session(auth=KerbAuth())
+    """
+
     def __init__(self):
         import time
         import kerberos
