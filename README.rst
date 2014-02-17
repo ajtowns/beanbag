@@ -44,7 +44,7 @@ though you'll usually need to provide some sort of authentication details:
 
 You can do DELETE requests too:
 
-    >>> del github.use.watched.ajtowns.beanbag
+    >>> del github.user.watched.ajtowns.beanbag
 
     >>> "https://api.github.com/repos/ajtowns/beanbag" in (
     ...     i["url"] for i in github.user.watched() )
