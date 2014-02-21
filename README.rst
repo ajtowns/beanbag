@@ -50,9 +50,15 @@ You can do DELETE requests too:
     ...     i["url"] for i in github.user.watched() )
     False
 
-POST and PATCH also have syntactic sugar, and you can use array-style
-references in place of attributes if you're dealing with variable
-components:
+You can use array-style references in place of attributes if you're
+dealing with variable components (or paths that are python reserved words,
+or otherwise invalid as an attribute):
+
+    >>> owner, repo = "ajtowns", "beanbag"
+    >>> watchers = github.repos[owner][repo].watchers()
+    >>> for w in watchers: print w["login"]
+
+POST and PATCH also have syntactic sugar, and 
 
     >>> # create a fork (POST request with empty body) 
     >>> repo = github.repos.ajtowns.beanbag.forks( None )
