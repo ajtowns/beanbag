@@ -323,7 +323,7 @@ class BeanBagException(Exception):
     def __str__(self):
         return self.msg
 
-class KerbAuth(object):
+class KerbAuth(requests.auth.AuthBase):
     """Helper class for basic Kerberos authentication using requests
        library. A single instance can be used for multiple sites. Each
        request to the same site will use the same authorization token
@@ -352,9 +352,10 @@ class KerbAuth(object):
             rc, vc = self.kerberos.authGSSClientInit(service);
             self.kerberos.authGSSClientStep(vc, "");
             header = "negotiate %s" % self.kerberos.authGSSClientResponse(vc)
-            last = time.time()
+            last = self.time()
             self.header_cache[hostname] = (header, last)
         r.headers['Authorization'] = header
+        return r
 
 class OAuth10aDance(object):
     __slots__ = [
