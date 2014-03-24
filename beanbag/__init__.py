@@ -65,7 +65,7 @@ see the twitter_example script.
 
 """
 
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 import requests
 import urlparse
@@ -240,7 +240,7 @@ class BeanBag(BeanBagPath):
         if fmt == 'json':
             content_type = "application/json"
             encode = json.dumps
-            decode = lambda req: req.json()
+            decode = lambda req: json.loads(req.text or req.content)
         else:
             content_type, encode, decode = fmt
 
@@ -281,8 +281,8 @@ class BeanBagRequest(object):
         r = self.session.request(verb, path, params=params, data=ebody)
 
         if r.status_code < 200 or r.status_code >= 300:
-            raise BeanBagException( "Bad response code: %d %s"
-                                      % (r.status_code, r.reason),
+            raise BeanBagException( "Bad response code: %d"
+                                      % (r.status_code,),
                                     r, (verb, path, params, ebody))
 
         if r.content == "":
