@@ -65,6 +65,8 @@ see the twitter_example script.
 
 """
 
+__version__ = '1.0.0'
+
 import requests
 import urlparse
 
