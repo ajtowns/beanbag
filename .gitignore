@@ -1,4 +1,4 @@
 beanbag.egg-info/
-beanbag.pyc
+*.pyc
 build/
 dist/
