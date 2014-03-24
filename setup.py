@@ -33,7 +33,7 @@ setup(
   long_description = long_description,
   packages=find_packages(exclude=["contrib", "docs", "tests*"]),
 
-  install_requires = ['requests'],
+  install_requires = ['requests >= 1.0.1'],
 
   url = 'https://github.com/ajtowns/beanbag',
 
