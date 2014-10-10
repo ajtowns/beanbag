@@ -69,7 +69,10 @@ from __future__ import print_function
 __version__ = '1.0.1'
 
 import requests
-import urlparse
+try:
+    from urlparse import urlparse, parse_qs
+except ImportError:
+    from urllib.parse import urlparse, parse_qs
 
 try:
     import json
@@ -348,7 +351,7 @@ class KerbAuth(requests.auth.AuthBase):
         self.kerberos = kerberos
 
     def __call__(self, r):
-        hostname = urlparse.urlparse(r.url).hostname
+        hostname = urlparse(r.url).hostname
         header, last = self.header_cache.get(hostname, (None, None))
         if not header or (self.time() - last) > self.timeout:
             service = "HTTP@" + hostname
@@ -386,7 +389,7 @@ class OAuth10aDance(object):
     def get_auth_url(self):
         oauth = self.OAuth1(self.client_key, client_secret = self.client_secret)
         r = requests.post(url=self.req_token, auth=oauth)
-        credentials = urlparse.parse_qs(r.content)
+        credentials = parse_qs(r.content)
 
         self.user_key = credentials.get('oauth_token', [""])[0]
         self.user_secret = credentials.get('oauth_token_secret', [""])[0]
@@ -400,7 +403,7 @@ class OAuth10aDance(object):
                        resource_owner_secret=self.user_secret,
                        verifier=verifier)
         r = requests.post(url=self.acc_token, auth=oauth)
-        credentials = urlparse.parse_qs(r.content)
+        credentials = parse_qs(r.content)
 
         self.user_key = credentials.get('oauth_token', [""])[0]
         self.user_secret = credentials.get('oauth_token_secret', [""])[0]
