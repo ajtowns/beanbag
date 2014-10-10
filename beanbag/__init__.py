@@ -289,7 +289,7 @@ class BeanBagRequest(object):
                                       % (r.status_code,),
                                     r, (verb, path, params, ebody))
 
-        if r.content == "":
+        if not r.content:
             return None
 
         elif r.headers.get("content-type", self.content_type).split(";",1)[0] == self.content_type:
