@@ -65,6 +65,7 @@ see the twitter_example script.
 
 """
 
+from __future__ import print_function
 __version__ = '1.0.1'
 
 import requests
@@ -420,12 +421,12 @@ class OAuth10aDance(object):
 
         assert self.req_token and self.acc_token and self.authorize
 
-        print 'Please go to url:\n  %s' % (self.get_auth_url(),)
+        print('Please go to url:\n  %s' % (self.get_auth_url(),))
         verifier = raw_input('Please input the verifier: ')
         self.verify(verifier)
 
-        print 'User key: %s\nUser secret: %s' % (self.user_key,
-                                                 self.user_secret)
+        print('User key: %s\nUser secret: %s' % (self.user_key,
+                                                 self.user_secret))
 
     def oauth(self):
         return self.OAuth1(self.client_key,
