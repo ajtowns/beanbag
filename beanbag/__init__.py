@@ -117,6 +117,10 @@ class BeanBagPath(object):
            >>> x["res"] = {"a": 1}
         """
 
+        if isinstance(val, BeanBagPath):
+            # handle __iadd__ correctly
+            # we do not want PATCH followed with immediate PUT
+            return
         return self[attr]("PUT", val)
 
     def __delattr__(self, attr):
@@ -150,7 +154,8 @@ class BeanBagPath(object):
            >>> x += {"op": "replace", "path": "/a", "value": 3}
         """
 
-        return self("PATCH", val)
+        self("PATCH", val)
+        return self
 
     def __eq__(self, other):
         """Compare two resource references."""
