@@ -288,10 +288,14 @@ class BeanBagException(Exception):
         self.request = request
 
     def __repr__(self):
-        return "%s(%s,...)" % (self.__class__.__name__, self.msg)
+        return "%s(%s,%s,%s)" % (self.__class__.__name__, self.msg,
+          self.response, self.request)
 
     def __str__(self):
-        return self.msg
+        msg = self.msg
+        if self.response and hasattr(self.response, "content"):
+          msg = "%s - response: %s" % (self.msg, self.response.content)
+        return msg
 
 
 class KerbAuth(requests.auth.AuthBase):
