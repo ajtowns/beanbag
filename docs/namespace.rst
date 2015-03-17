@@ -10,5 +10,7 @@ Classes and Variables
 
 .. automodule:: beanbag.namespace
    :members:
+   :inherited-members:
+   :special-members:
    :undoc-members:
 
