@@ -20,6 +20,16 @@ A simple example:
    >>> watchers = github.repos.ajtowns.beanbag.watchers()
    >>> for w in watchers: print(w["login"])
 
+Contents
+--------
+
+.. toctree::
+   :maxdepth: 2
+
+   url.rst
+   attrdict.rst
+   namespace.rst
+
 Credits
 -------
 
@@ -40,13 +50,6 @@ Test case contributors and bug reporters:
 BeanBag is inspired by Kadir Pekel's Hammock, though sadly only
 shares a license, and not any actual code. Hammock is available from
 `https://github.com/kadirpekel/hammock`.
-
-.. toctree::
-   :maxdepth: 2
-
-   url.rst
-   attrdict.rst
-   namespace.rst
 
 Indices and tables
 ==================

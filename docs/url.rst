@@ -1,5 +1,5 @@
-beanbag.url -- REST API access
-==============================
+beanbag -- REST API access
+==========================
 
 Access REST API by URL...
 
