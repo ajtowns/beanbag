@@ -308,9 +308,9 @@ class BeanBagException(Exception):
     """Exception thrown when a BeanBag request fails.
 
        Data members:
-          msg      -- exception string, brief and human readable
-          request  -- original request object
-          response -- response object
+         * msg      -- exception string, brief and human readable
+         * request  -- original request object
+         * response -- response object
 
        Use request and response fields for debugging.
     """
