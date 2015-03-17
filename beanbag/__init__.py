@@ -66,7 +66,7 @@ see the twitter_example script.
 """
 
 from __future__ import print_function
-__version__ = '1.0.1'
+__version__ = '1.9.0'
 
 import requests
 try:
