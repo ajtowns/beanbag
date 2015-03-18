@@ -1,0 +1,3 @@
+docs/_build/html           /usr/share/doc/python-beanbag-doc
+README.rst                 /usr/share/doc/python-beanbag-doc
+examples                   /usr/share/doc/python-beanbag-doc/examples

@@ -1,0 +1,36 @@
+Source: beanbag
+Maintainer: Anthony Towns <aj@erisian.com.au>
+Section: python
+Priority: optional
+Build-Depends: python-setuptools (>= 0.6b3), python-all (>= 2.6.6-3), debhelper (>= 9), dh-python, python3-all, python3-setuptools, python-docutils, python-sphinx (>= 1.2), python-pytest, python3-pytest, python-requests
+Standards-Version: 3.9.1
+
+Package: python-beanbag
+Architecture: all
+Suggests: python-beanbag-doc
+Depends: ${misc:Depends}, ${python:Depends}
+Description: A helper module for accessing REST APIs
+ BeanBag is a simple module that lets you access REST APIs in an easy
+ way. See `http://beanbag.readthedocs.org/` for more information.
+ .
+ This package installs the library for Python 2.
+
+Package: python3-beanbag
+Architecture: all
+Suggests: python-beanbag-doc
+Depends: ${misc:Depends}, ${python3:Depends}
+Description: A helper module for accessing REST APIs
+ BeanBag is a simple module that lets you access REST APIs in an easy
+ way. See `http://beanbag.readthedocs.org/` for more information.
+ .
+ This package installs the library for Python 3.
+
+Package: python-beanbag-doc
+Architecture: all
+Depends: ${misc:Depends}, ${sphinxdoc:Depends}
+Description: Documentation for Python BeanBag module
+ BeanBag is a simple module that lets you access REST APIs in an easy
+ way. See `http://beanbag.readthedocs.org/` for more information.
+ .
+ This package installs the module's documentation.
+
