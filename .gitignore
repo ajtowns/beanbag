@@ -2,3 +2,4 @@ beanbag.egg-info/
 *.pyc
 build/
 dist/
+docs/_build/
