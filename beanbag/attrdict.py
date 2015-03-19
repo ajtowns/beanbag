@@ -3,9 +3,14 @@
 from . import namespace
 
 class AttrDict(namespace.SettableHierarchialBase):
-    """Allow access to dictionary via attributes"""
+    """Allow access to dictionary via attributes as well as array-style references"""
 
     def __init__(self, basedict=None):
+        """Provide an AttrDict view of a dictionary.
+
+        :param basedict: dictionary to be viewed
+        """
+
         if basedict is None:
             self.basedict = {}
         else:
@@ -28,6 +33,8 @@ class AttrDict(namespace.SettableHierarchialBase):
         return base
 
     def pos(self, path):
+        """View underlying dict object"""
+
         return self.descend(path, create=KeyError)
 
     def str(self, path):
@@ -49,6 +56,8 @@ class AttrDict(namespace.SettableHierarchialBase):
         del o[path[-1]]
 
     def eq(self, path, other):
+        """self == other"""
+
         try:
             return other == (self.pos(path))
         except KeyError:
