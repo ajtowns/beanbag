@@ -341,16 +341,16 @@ class OAuth10aDance(object):
 
         The final set of parameters identify the user to server. These
         may be left as None, and obtained using the OAuth 1.0a protocol
-        via the `obtain_creds()` method or using the `get_auth_url()`
-        and `verify_user()` methods.
+        via the ``obtain_creds()`` method or using the ``get_auth_url()``
+        and ``verify_user()`` methods.
 
         :param user_key: user key
         :param user_secret: user secret
 
         Assuming OAuthDanceTwitter is defined as above, and you have
         obtained the client key and secret (see https://apps.twitter.com/
-        for twitter) as `k` and `s`, then putting these together looks
-        like:
+        for twitter) as ``k`` and ``s``, then putting these together
+        looks like:
 
         :Example:
 
