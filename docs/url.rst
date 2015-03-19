@@ -41,8 +41,8 @@ To do a request on a resource that requires a trailing slash:
    http://hostname/api/foo/bar/
    >>> print(foo.bar._.x == foo.bar.x)
    True
-   >>> print(foo.bar["_"]
-   http://hostname/api/foo/bar/_)
+   >>> print(foo.bar["_"])
+   http://hostname/api/foo/bar/_
 
 To access REST interfaces that require authentication, you need to
 specify a session object. BeanBag supplies helpers to make Kerberos
