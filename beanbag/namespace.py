@@ -75,7 +75,20 @@ def sig_adapt(sigfn, dropargs=None, name=None):
 
     return adapter
 
-class BaseMeta(type):
+class NamespaceMeta(type):
+    # number ops are special since they have reverse and inplace variants
+    num_ops = "add sub mul pow div floordiv lshift rshift and or xor".split()
+
+    inum_ops = ["i"+_x for _x in num_ops]
+
+    ops = ("repr str call bool" # standard
+           " getitem setitem delitem len iter reversed contains" # container
+           " enter exit" # context
+           " pos neg invert" # unary
+           " eq ne lt le gt ge" # comparsion
+           # "cmp rcmp hash unicode", # maybe should do these too?
+          ).split() + num_ops + ["r"+_x for _x in num_ops]
+
     def __new__(mcls, name, bases, nmspc):
         if "__namespace_name__" in nmspc:
             clsname = name
@@ -140,24 +153,9 @@ class BaseMeta(type):
         if name is None:
             name = cls.__name__
 
-        std_ops = "repr str call bool".split()
-        lst_ops = "getitem setitem delitem len iter reversed contains".split()
-        ctx_ops = "enter exit".split()
-        num_ops = "add sub mul pow div floordiv lshift rshift and or xor".split()
-        uni_ops = "pos neg invert".split()
-        cmp_ops = "eq ne lt le gt ge".split()
-
-        others = "cmp rcmp hash unicode "
-
-        rnum_ops = ["r"+x for x in num_ops]
-        inum_ops = ["i"+x for x in num_ops]
-
-        ops = std_ops + lst_ops + num_ops + rnum_ops + uni_ops + cmp_ops
-        # inum_ops done separately
-
-
         class Namespace(object):
             __slots__ = ("__base", "__path")
+            __basecls = cls
 
             if hasattr(cls, "getattr"):
                 @sig_adapt(cls.getattr, dropargs=(1,), name="__getattr__")
@@ -181,10 +179,10 @@ class BaseMeta(type):
                         return object.__delattr__(self, attr)
                     return self.__base.delattr(self.__path, attr)
 
-        for op in ops:
+        for op in mcls.ops:
             mcls.deferfn(cls, Namespace, op)
 
-        for op in inum_ops:
+        for op in mcls.inum_ops:
             mcls.deferfn(cls, Namespace, op, inplace=True)
 
         def init(self, *args, **kwargs):
@@ -212,9 +210,9 @@ class BaseMeta(type):
 # setup base class so can use metaclass via inheritance
 # (this is the only common syntax for using metaclasses that works
 # with both py2 and py3)
-BaseBase = type.__new__(BaseMeta, "BaseBase", (object,), {})
+NamespaceBase = type.__new__(NamespaceMeta, "NamespaceBase", (object,), {})
 
-class HierarchialBase(BaseBase):
+class HierarchialBase(NamespaceBase):
     __no_clever_meta__ = True
 
     def __init__(self):
