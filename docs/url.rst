@@ -94,7 +94,6 @@ Authentication Helpers
    :special-members:
 
 .. autoclass:: OAuth10aDance
-   :members:
-   :special-members:
-   :undoc-members:
+   :members: __init__, get_auth_url, have_creds, oauth, obtain_creds, verify_user
+   :member-order: bysource
 

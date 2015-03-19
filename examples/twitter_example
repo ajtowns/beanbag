@@ -14,7 +14,7 @@ user_key, user_secret = (None, None)
 oauthDance = OAuthDanceTwitter(
         client_key=client_key, client_secret=client_secret,
         user_key=user_key, user_secret=user_secret)
-oauthDance.ensure_creds(interactive=True)
+oauthDance.obtain_creds()
 
 session = requests.Session()
 session.auth = oauthDance.oauth()
