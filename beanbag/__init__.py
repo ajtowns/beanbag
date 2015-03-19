@@ -271,7 +271,7 @@ class KerbAuth(requests.auth.AuthBase):
     """Helper class for basic Kerberos authentication using requests
        library. A single instance can be used for multiple sites. Each
        request to the same site will use the same authorization token
-       for a period of 180 seconds (.timeout member).
+       for a period of 180 seconds.
 
        :Example:
 
@@ -279,12 +279,12 @@ class KerbAuth(requests.auth.AuthBase):
        >>> session.auth = KerbAuth()
     """
 
-    def __init__(self):
+    def __init__(self, timeout=180):
         import time
         import kerberos
 
         self.header_cache = {}
-        self.timeout = 180
+        self.timeout = timeout
 
         self.time = time.time
         self.kerberos = kerberos
@@ -292,7 +292,7 @@ class KerbAuth(requests.auth.AuthBase):
     def __call__(self, r):
         hostname = urlparse(r.url).hostname
         header, last = self.header_cache.get(hostname, (None, None))
-        if not header or (self.time() - last) > self.timeout:
+        if not header or (self.time() - last) >= self.timeout:
             service = "HTTP@" + hostname
             rc, vc = self.kerberos.authGSSClientInit(service);
             self.kerberos.authGSSClientStep(vc, "");
