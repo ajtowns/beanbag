@@ -24,6 +24,7 @@ behavour of the ``~`` operator (aka ``__invert__(self)``), the Base class
 defines a method:
 
 .. code:: python
+
    def invert(self, path):
        ...
 
@@ -40,9 +41,10 @@ to avoid the "double setting" behaviour of python's inplace operations, ie
 where ``a[i] += j`` is converted into:
 
 .. code:: python
-   tmp = a.__getitem__(i)
-   res = tmp.__iadd__(j)
-   a.__setitem__(i, res)
+
+   tmp = a.__getitem__(i)   # tmp = a[i]
+   res = tmp.__iadd__(j)    # tmp += j
+   a.__setitem__(i, res)    # a[i] = tmp
 
 In particular, implementations of ``setitem`` and ``setattr`` can avoid
 poor behaviour here by testing whether the value being set (``res``)
