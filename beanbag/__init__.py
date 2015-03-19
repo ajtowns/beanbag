@@ -4,67 +4,6 @@
 # Written by Anthony Towns <atowns@redhat.com>
 # See LICENSE file.
 
-"""Helper module for accessing REST interfaces
-
-Setup:
-
->>> import beanbag
->>> foo = beanbag.BeanBag("http://hostname/api/")
-
-To do REST queries, then:
-
->>> r = foo.resource(p1=3.14, p2=2.718)  # GET request
->>> r = foo.resource( {"a": 3, "b": 7} ) # POST request
->>> del foo.resource                     # DELETE request
->>> foo.resource = {"a" : 7, "b": 3}     # PUT request
->>> foo.resource += {"a" : 7, "b": 3}    # PATCH request
-
-You can chain paths as well:
-
->>> print foo.bar.baz[3]["xyzzy"].q
-http://hostname/api/foo/bar/baz/3/xyzzy/q
-
-To do a request on a resource that requires a trailing slash:
-
->>> print foo.bar._
-http://hostname/api/foo/bar/
->>> print foo.bar[""]
-http://hostname/api/foo/bar/
->>> print foo.bar["/"]
-http://hostname/api/foo/bar/
->>> print foo["bar/"]
-http://hostname/api/foo/bar/
->>> print foo.bar._.x == foo.bar.x
-True
->>> print foo.bar["_"]
-http://hostname/api/foo/bar/_
-
-To access REST interfaces that require authentication, you need to
-specify a session object. BeanBag supplies helpers to make Kerberos
-and OAuth 1.0a authentication easier.
-
-To setup kerberos auth:
-
->>> import requests
->>> session = requests.Session()
->>> session.auth = beanbag.KerbAuth()
->>> foo = beanbag.BeanBag("http://hostname/api/", session=session)
-
-To setup oauth using OAuth1 directly:
-
->>> import requests
->>> from requests_oauth import OAuth1
->>> session = requests.Session()
->>> session.auth = OAuth1( consumer creds, user creds )
->>> foo = beanbag.BeanBag("http://hostname/api/", session=session)
-
-To setup oauth using beanbag's OAuth10aDance helper (which will
-generate the authentication url and construct user credentials from the
-verification token supplied when the auth url is visited in a browser),
-see the twitter_example script.
-
-"""
-
 from __future__ import print_function
 __version__ = '1.9.0'
 
@@ -99,7 +38,8 @@ class BeanBagPath(object):
     def __getattr__(self, attr):
         """Refer to a subresource.
 
-           Example:
+           :Example:
+
            >>> x = BeanBag("http://host/api")
            >>> print x.myresource
            http://host/api/myresource
@@ -113,7 +53,8 @@ class BeanBagPath(object):
     def __getitem__(self, item):
         """Refer to a subresource.
 
-           Example:
+           :Example:
+
            >>> x = BeanBag("http://host/api")
            >>> y = "myresource"
            >>> print x[y]
@@ -132,23 +73,14 @@ class BeanBagPath(object):
     def __call__(self, *args, **kwargs):
         """Make a GET, POST or generic request to a resource.
 
-           Example:
+           :Example:
+
            >>> x = BeanBag("http://host/api")
-
-           GET request:
-           >>> r = x()
-
-           GET request with parameters passed via query string
-           >>> r = x(p1='foo', p2=3)
-
-           POST request:
-           >>> r = x( {'a': 1, 'b': 2} )
-
-           Custom HTTP verb with request body:
-           >>> r = x( "RANDOMIZE", {'a': 1, 'b': 2} )
-
-           Custom HTTP verb with empty request body:
-           >>> r = x( "OPTIONS", None )
+           >>> r = x()                                 # GET request
+           >>> r = x(p1='foo', p2=3)                   # GET request with parameters passed via query string
+           >>> r = x( {'a': 1, 'b': 2} )               # POST request
+           >>> r = x( "RANDOMIZE", {'a': 1, 'b': 2} )  # Custom HTTP verb with request body
+           >>> r = x( "OPTIONS", None )                # Custom HTTP verb with empty request body
         """
 
         if len(args) == 0:
@@ -165,7 +97,8 @@ class BeanBagPath(object):
     def __setattr__(self, attr, val):
         """Make a PUT request to a subresource.
 
-           Example:
+           :Example:
+
            >>> x = BeanBag("http://host/api")
            >>> x.res = {"a": 1}
         """
@@ -178,7 +111,8 @@ class BeanBagPath(object):
     def __setitem__(self, attr, val):
         """Make a PUT request to a subresource.
 
-           Example:
+           :Example:
+
            >>> x = BeanBag("http://host/api")
            >>> x["res"] = {"a": 1}
         """
@@ -188,7 +122,8 @@ class BeanBagPath(object):
     def __delattr__(self, attr):
         """Make a DELETE request to a subresource.
 
-           Example:
+           :Example:
+
            >>> x = BeanBag("http://host/api")
            >>> del x.res
         """
@@ -198,7 +133,8 @@ class BeanBagPath(object):
     def __delitem__(self, attr):
         """Make a DELETE request to a subresource.
 
-           Example:
+           :Example:
+
            >>> x = BeanBag("http://host/api")
            >>> del x["res"]
         """
@@ -208,7 +144,8 @@ class BeanBagPath(object):
     def __iadd__(self, val):
         """Make a PATCH request to a resource.
 
-           Example:
+           :Example:
+
            >>> x = BeanBag("http://host/api")
            >>> x += {"op": "replace", "path": "/a", "value": 3}
         """
@@ -223,17 +160,19 @@ class BeanBagPath(object):
             return False
 
 class BeanBag(BeanBagPath):
+    """Helper module for accessing REST interfaces"""
+
     __slots__ = ()
     def __init__(self, base_url, ext = "", session = None,
                  fmt='json'):
         """Create a BeanBag reference a base REST path.
 
            Parameters:
-               base_url: the base URL prefix for all resources
-               ext: extension to add to resource URLs, eg ".json"
-               session: requests.Session instance used for this API. Useful
+             * base_url: the base URL prefix for all resources
+             * ext: extension to add to resource URLs, eg ".json"
+             * session: requests.Session instance used for this API. Useful
                   to set an auth procedure, or change verify parameter.
-               fmt: either 'json' for json data, or a tuple specifying a
+             * fmt: either 'json' for json data, or a tuple specifying a
                   content-type string, encode function (for encoding the
                   request body) and a decode function (for decoding responses)
         """
@@ -335,7 +274,8 @@ class KerbAuth(requests.auth.AuthBase):
        request to the same site will use the same authorization token
        for a period of 180 seconds (.timeout member).
 
-       Usage:
+       :Example:
+
        >>> session = requests.Session()
        >>> session.auth = KerbAuth()
     """
