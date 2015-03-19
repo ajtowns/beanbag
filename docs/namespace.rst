@@ -23,7 +23,7 @@ special methods the namespace will have. For example, to define the
 behavour of the ``~`` operator (aka ``__invert__(self)``), the Base class
 defines a method:
 
-.. code::
+.. code:: python
    def invert(self, path):
        ...
 
@@ -39,7 +39,7 @@ overhead of reconstructing the object). This is primarily to make it easier
 to avoid the "double setting" behaviour of python's inplace operations, ie
 where ``a[i] += j`` is converted into:
 
-.. code::
+.. code:: python
    tmp = a.__getitem__(i)
    res = tmp.__iadd__(j)
    a.__setitem__(i, res)
@@ -111,6 +111,10 @@ SettableHierarchialBase
 want to be able to assign to your hierarchial namespace. It provides ``set``
 and ``delete`` methods that you can implement, without having to go to the
 trouble of implementing both item and attribute variants of both functions.
+
+This class implements the check for "setting to self" mentioned earlier in
+order to prevent inplace operations having two effects. It uses the ``eq``
+method to test for equality.
 
 .. autoclass:: SettableHierarchialBase
    :show-inheritance:
