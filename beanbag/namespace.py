@@ -95,12 +95,8 @@ class NamespaceMeta(type):
             nsname = nmspc["__namespace_name__"]
         else:
             if "__no_clever_meta__" in nmspc:
-                if name.endswith("Base"):
-                    clsname = name
-                    nsname = name[:-4]
-                else:
-                    clsname = name
-                    nsname = name + "NS"
+                clsname = name
+                nsname = name + "NS"
             else:
                 clsname = name + "Base"
                 nsname = name
@@ -219,6 +215,7 @@ class HierarchialBase(NamespaceBase):
         pass
 
     def path(self):
+        """Returns empty path"""
         return ()
 
     def _get(self, path, el):
