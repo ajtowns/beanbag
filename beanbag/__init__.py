@@ -167,12 +167,11 @@ class BeanBag(BeanBagPath):
                  fmt='json'):
         """Create a BeanBag reference a base REST path.
 
-           Parameters:
-             * base_url: the base URL prefix for all resources
-             * ext: extension to add to resource URLs, eg ".json"
-             * session: requests.Session instance used for this API. Useful
+           :param base_url: the base URL prefix for all resources
+           :param ext: extension to add to resource URLs, eg ".json"
+           :param session: requests.Session instance used for this API. Useful
                   to set an auth procedure, or change verify parameter.
-             * fmt: either 'json' for json data, or a tuple specifying a
+           :param fmt: either 'json' for json data, or a tuple specifying a
                   content-type string, encode function (for encoding the
                   request body) and a decode function (for decoding responses)
         """
