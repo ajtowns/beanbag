@@ -63,7 +63,3 @@ class AttrDict(namespace.SettableHierarchialBase):
     def len(self, path):
         return self.pos(path).__len__()
 
-    def iadd(self, path, val):
-        self.basedict[path] += val
-        return None
-
