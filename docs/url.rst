@@ -86,12 +86,15 @@ BeanBagException
    :members:
    :special-members:
 
-Authentication Helpers
-----------------------
+Kerberos Authentication Helper
+------------------------------
 
 .. autoclass:: KerbAuth
-   :members:
-   :special-members:
+   :members: __init__
+   :undoc-members:
+
+OAuth 1.0a Authentication Helper
+--------------------------------
 
 .. autoclass:: OAuth10aDance
    :members: __init__, get_auth_url, have_creds, oauth, obtain_creds, verify_user
