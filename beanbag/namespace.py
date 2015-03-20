@@ -4,6 +4,7 @@ import inspect
 import functools
 import sys
 
+
 def sig_adapt(sigfn, dropargs=None, name=None):
     """Function decorator that changes the name and (optionally) signature
        of a function to match another function. This is useful for
@@ -33,7 +34,8 @@ def sig_adapt(sigfn, dropargs=None, name=None):
         def adapter(fn):
             sig = inspect.signature(sigfn)
             if dropargs is not None:
-                newparams = [p for i,(name,p) in enumerate(sig.parameters.items())
+                newparams = [p
+                        for i, (name, p) in enumerate(sig.parameters.items())
                         if i not in dropargs and name not in dropargs]
                 sig = sig.replace(parameters=newparams)
 
@@ -75,17 +77,18 @@ def sig_adapt(sigfn, dropargs=None, name=None):
 
     return adapter
 
+
 class NamespaceMeta(type):
     # number ops are special since they have reverse and inplace variants
     num_ops = "add sub mul pow div floordiv lshift rshift and or xor".split()
 
     inum_ops = ["i"+_x for _x in num_ops]
 
-    ops = ("repr str call bool" # standard
-           " getitem setitem delitem len iter reversed contains" # container
-           " enter exit" # context
-           " pos neg invert" # unary
-           " eq ne lt le gt ge" # comparsion
+    ops = ("repr str call bool"   # standard
+           " getitem setitem delitem len iter reversed contains"   # container
+           " enter exit"          # context
+           " pos neg invert"      # unary
+           " eq ne lt le gt ge"   # comparsion
            # "cmp rcmp hash unicode", # maybe should do these too?
           ).split() + num_ops + ["r"+_x for _x in num_ops]
 
@@ -117,18 +120,18 @@ class NamespaceMeta(type):
     @classmethod
     def deferfn(mcls, cls, nscls, basefnname, inplace=False):
         if not hasattr(cls, basefnname):
-            return # not implemented so nothing to do
+            return   # not implemented so nothing to do
 
         basefn = getattr(cls, basefnname)
 
         if not inplace:
             def fn(self, *args, **kwargs):
                 return basefn(self._Namespace__base, self._Namespace__path,
-                        *args, **kwargs)
+                              *args, **kwargs)
         else:
             def fn(self, *args, **kwargs):
                 r = basefn(self._Namespace__base, self._Namespace__path,
-                        *args, **kwargs)
+                           *args, **kwargs)
                 if r is None:
                     r = self
                 return r
@@ -155,25 +158,27 @@ class NamespaceMeta(type):
 
             if hasattr(cls, "getattr"):
                 @sig_adapt(cls.getattr, dropargs=(1,), name="__getattr__")
-                def __getattr__(self, attr):
-                    if attr.startswith("_Namespace__") or attr.startswith("__"):
-                        raise AttributeError("%s object '%s' has no attribute '%s'" % (self.__class__.__name__, repr(self), attr))
-                    r = self.__base.getattr(self.__path, attr)
+                def __getattr__(self, a):
+                    if a.startswith("_Namespace__") or a.startswith("__"):
+                        raise AttributeError(
+                                "%s object '%s' has no attribute '%s'" %
+                                  (self.__class__.__name__, repr(self), a))
+                    r = self.__base.getattr(self.__path, a)
                     return r
 
             if hasattr(cls, "setattr"):
                 @sig_adapt(cls.setattr, dropargs=(1,), name="__setattr__")
-                def __setattr__(self, attr, val):
-                    if attr.startswith("_Namespace__") or attr.startswith("__"):
-                        return object.__setattr__(self, attr, val)
-                    return self.__base.setattr(self.__path, attr, val)
+                def __setattr__(self, a, val):
+                    if a.startswith("_Namespace__") or a.startswith("__"):
+                        return object.__setattr__(self, a, val)
+                    return self.__base.setattr(self.__path, a, val)
 
             if hasattr(cls, "delattr"):
                 @sig_adapt(cls.delattr, dropargs=(1,), name="__delattr__")
-                def __delattr__(self, attr):
-                    if attr.startswith("_Namespace__") or attr.startswith("__"):
-                        return object.__delattr__(self, attr)
-                    return self.__base.delattr(self.__path, attr)
+                def __delattr__(self, a):
+                    if a.startswith("_Namespace__") or a.startswith("__"):
+                        return object.__delattr__(self, a)
+                    return self.__base.delattr(self.__path, a)
 
         for op in mcls.ops:
             mcls.deferfn(cls, Namespace, op)
@@ -203,10 +208,12 @@ class NamespaceMeta(type):
 
         return Namespace, namespace
 
+
 # setup base class so can use metaclass via inheritance
 # (this is the only common syntax for using metaclasses that works
 # with both py2 and py3)
 NamespaceBase = type.__new__(NamespaceMeta, "NamespaceBase", (object,), {})
+
 
 class HierarchialBase(NamespaceBase):
     __no_clever_meta__ = True
@@ -221,7 +228,6 @@ class HierarchialBase(NamespaceBase):
     def _get(self, path, el):
         """Returns updated path when new component is added"""
         return path + (el,)
-
 
     def str(self, path):
         """Returns path joined by dots"""
@@ -251,6 +257,7 @@ class HierarchialBase(NamespaceBase):
     def item(self, item):
         """Applies any conversion needed for items (self[item])"""
         return str(item)
+
     def attr(self, attr):
         """Applies any conversion needed for attributes (self.attr)"""
         return str(attr)
@@ -262,6 +269,7 @@ class HierarchialBase(NamespaceBase):
     def getitem(self, path, item):
         """self[attr]"""
         return self.get(self._get(path, self.item(item)))
+
 
 class SettableHierarchialBase(HierarchialBase):
     __no_clever_meta__ = True

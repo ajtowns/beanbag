@@ -2,8 +2,10 @@
 
 from . import namespace
 
+
 class AttrDict(namespace.SettableHierarchialBase):
-    """Allow access to dictionary via attributes as well as array-style references"""
+    """Allow access to dictionary via attributes as well as
+       array-style references."""
 
     def __init__(self, basedict=None):
         """Provide an AttrDict view of a dictionary.
@@ -17,7 +19,7 @@ class AttrDict(namespace.SettableHierarchialBase):
             self.basedict = basedict
 
     def repr(self, path):
-        return "<%s(%s)>" % (self.Namespace.__name__, ".".join(map(str,path)))
+        return "<%s(%s)>" % (self.Namespace.__name__, ".".join(map(str, path)))
 
     def descend(self, path, create=True):
         base = self.basedict

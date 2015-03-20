@@ -18,8 +18,14 @@ try:
 except ImportError:
     import simplejson as json
 
+try:
+    input = raw_input  # rename raw_input for compat with py3
+except NameError:
+    pass
+
 __all__ = ['BeanBag', 'BeanBagException',
            'KerbAuth', 'OAuth10aDance']
+
 
 class BeanBagPath(object):
     __slots__ = ("__bbr", "__path")
@@ -47,7 +53,9 @@ class BeanBagPath(object):
            http://host/api/myresource/
         """
 
-        if attr == "_": attr = "/"
+        if attr == "_":
+            attr = "/"
+
         return self.__getitem__(attr)
 
     def __getitem__(self, item):
@@ -103,9 +111,12 @@ class BeanBagPath(object):
            >>> x.res = {"a": 1}
         """
 
-        if attr == "_": attr = "/"
+        if attr == "_":
+            attr = "/"
+
         if attr.startswith("_BeanBagPath__"):
             return super(BeanBagPath, self).__setattr__(attr, val)
+
         return self.__setitem__(attr, val)
 
     def __setitem__(self, attr, val):
@@ -132,7 +143,9 @@ class BeanBagPath(object):
            >>> del x.res
         """
 
-        if attr == "_": attr = "/"
+        if attr == "_":
+            attr = "/"
+
         return self.__delitem__(attr)
 
     def __delitem__(self, attr):
@@ -165,12 +178,13 @@ class BeanBagPath(object):
         else:
             return False
 
+
 class BeanBag(BeanBagPath):
     """Helper module for accessing REST interfaces"""
 
     __slots__ = ()
-    def __init__(self, base_url, ext = "", session = None,
-                 fmt='json'):
+
+    def __init__(self, base_url, ext="", session=None, fmt='json'):
         """Create a BeanBag reference a base REST path.
 
            :param base_url: the base URL prefix for all resources
@@ -196,6 +210,7 @@ class BeanBag(BeanBagPath):
                 content_type=content_type, encode=encode, decode=decode)
 
         super(BeanBag, self).__init__(bbr, "")
+
 
 class BeanBagRequest(object):
     def __init__(self, session, base_url, ext, content_type, encode, decode):
@@ -229,14 +244,16 @@ class BeanBagRequest(object):
         r = self.session.request(verb, path, params=params, data=ebody)
 
         if r.status_code < 200 or r.status_code >= 300:
-            raise BeanBagException( "Bad response code: %d"
-                                      % (r.status_code,),
+            raise BeanBagException("Bad response code: %d" % (r.status_code,),
                                     r, (verb, path, params, ebody))
 
         if not r.content:
             return None
 
-        elif r.headers.get("content-type", self.content_type).split(";",1)[0] == self.content_type:
+        ctype = r.headers.get("content-type", self.content_type)
+        ctype = ctype.split(";", 1)[0]
+
+        if ctype == self.content_type:
             try:
                 return self.decode(r)
             except:
@@ -244,9 +261,11 @@ class BeanBagRequest(object):
                         r, (verb, path, params, ebody))
 
         else:
-            raise BeanBagException("Bad content-type in response (Content-Type: %s)"
-                                     % (r.headers["content-type"],),
-                                   r, (verb, path, params, ebody))
+            raise BeanBagException(
+                    "Bad content-type in response (Content-Type: %s)"
+                         % (r.headers["content-type"],),
+                    r, (verb, path, params, ebody))
+
 
 class BeanBagException(Exception):
     """Exception thrown when a BeanBag request fails.
@@ -270,8 +289,10 @@ class BeanBagException(Exception):
 
     def __repr__(self):
         return "%s(%s,...)" % (self.__class__.__name__, self.msg)
+
     def __str__(self):
         return self.msg
+
 
 class KerbAuth(requests.auth.AuthBase):
     """Helper class for basic Kerberos authentication using requests
@@ -300,13 +321,14 @@ class KerbAuth(requests.auth.AuthBase):
         header, last = self.header_cache.get(hostname, (None, None))
         if not header or (self.time() - last) >= self.timeout:
             service = "HTTP@" + hostname
-            rc, vc = self.kerberos.authGSSClientInit(service);
-            self.kerberos.authGSSClientStep(vc, "");
+            rc, vc = self.kerberos.authGSSClientInit(service)
+            self.kerberos.authGSSClientStep(vc, "")
             header = "negotiate %s" % self.kerberos.authGSSClientResponse(vc)
             last = self.time()
             self.header_cache[hostname] = (header, last)
         r.headers['Authorization'] = header
         return r
+
 
 class OAuth10aDance(object):
     __slots__ = [
@@ -388,7 +410,7 @@ class OAuth10aDance(object):
     def get_auth_url(self):
         """URL for user to obtain verification code"""
 
-        oauth = self.OAuth1(self.client_key, client_secret = self.client_secret)
+        oauth = self.OAuth1(self.client_key, client_secret=self.client_secret)
         r = requests.post(url=self.req_token, auth=oauth)
         credentials = parse_qs(r.content)
 
@@ -412,11 +434,11 @@ class OAuth10aDance(object):
         self.user_secret = credentials.get('oauth_token_secret', [""])[0]
 
     def obtain_creds(self):
-        """Fill in credentials by interacting with the user (raw_input/print)"""
+        """Fill in credentials by interacting with the user (input/print)"""
         if not self.client_key:
-            self.client_key = raw_input('Please input client key: ')
+            self.client_key = input('Please input client key: ')
         if not self.client_secret:
-            self.client_secret = raw_input('Please input client secret: ')
+            self.client_secret = input('Please input client secret: ')
 
         if self.user_key and self.user_secret:
             return
@@ -424,7 +446,7 @@ class OAuth10aDance(object):
         assert self.req_token and self.acc_token and self.authorize
 
         print('Please go to url:\n  %s' % (self.get_auth_url(),))
-        verifier = raw_input('Please input the verifier: ')
+        verifier = input('Please input the verifier: ')
         self.verify_user(verifier)
 
         print('User key: %s\nUser secret: %s' % (self.user_key,
@@ -435,7 +457,7 @@ class OAuth10aDance(object):
 
         assert self.have_creds()
         return self.OAuth1(self.client_key,
-                           client_secret = self.client_secret,
-                           resource_owner_key = self.user_key,
-                           resource_owner_secret = self.user_secret)
+                           client_secret=self.client_secret,
+                           resource_owner_key=self.user_key,
+                           resource_owner_secret=self.user_secret)
 
