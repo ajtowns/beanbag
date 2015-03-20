@@ -1,13 +1,13 @@
-.. module:: beanbag
+.. module:: beanbag.v1
 
-beanbag -- REST API access
-==========================
+beanbag.v1 -- Original-style REST API access
+============================================
 
 Setup:
 
 .. code:: python
 
-   >>> import beanbag
+   >>> import beanbag.v1 as beanbag
    >>> foo = beanbag.BeanBag("http://hostname/api/")
 
 To do REST queries, then:
@@ -48,15 +48,6 @@ To access REST interfaces that require authentication, you need to
 specify a session object. BeanBag supplies helpers to make Kerberos
 and OAuth 1.0a authentication easier.
 
-To setup kerberos auth:
-
-.. code:: python
-
-   >>> import requests
-   >>> session = requests.Session()
-   >>> session.auth = beanbag.KerbAuth()
-   >>> foo = beanbag.BeanBag("http://hostname/api/", session=session)
-
 To setup oauth using OAuth1 directly:
 
 .. code:: python
@@ -67,10 +58,7 @@ To setup oauth using OAuth1 directly:
    >>> session.auth = OAuth1( consumer creds, user creds )
    >>> foo = beanbag.BeanBag("http://hostname/api/", session=session)
 
-To setup oauth using beanbag's OAuth10aDance helper (which will
-generate the authentication url and construct user credentials from the
-verification token supplied when the auth url is visited in a browser),
-see the twitter_example script.
+Using the ``OAuth10aDance`` helper is probably a good plan though.
 
 BeanBag class
 -------------
@@ -85,18 +73,4 @@ BeanBagException
 .. autoexception:: BeanBagException
    :members:
    :special-members:
-
-Kerberos Authentication Helper
-------------------------------
-
-.. autoclass:: KerbAuth
-   :members: __init__
-   :undoc-members:
-
-OAuth 1.0a Authentication Helper
---------------------------------
-
-.. autoclass:: OAuth10aDance
-   :members: __init__, get_auth_url, have_creds, oauth, obtain_creds, verify_user
-   :member-order: bysource
 

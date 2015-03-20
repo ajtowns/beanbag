@@ -26,7 +26,8 @@ Contents
 .. toctree::
    :maxdepth: 2
 
-   url.rst
+   v1.rst
+   auth.rst
    attrdict.rst
    namespace.rst
 
