@@ -38,7 +38,7 @@ setup(
   url = 'https://github.com/ajtowns/beanbag',
 
   author = 'Anthony Towns',
-  author_email = 'atowns@redhat.com',
+  author_email = 'aj@erisian.com.au',
 
   license = 'MIT',
 
@@ -46,6 +46,7 @@ setup(
     'Development Status :: 4 - Beta',
     'Intended Audience :: Developers',
     'Programming Language :: Python :: 2',
+    'Programming Language :: Python :: 3',
     'License :: OSI Approved :: MIT License',
   ],
 )
