@@ -1,0 +1,115 @@
+.. module:: beanbag.v2
+
+beanbag.v2 -- REST API access
+=============================
+
+A quick example:
+
+.. code:: python
+
+    >>> from beanbag.v2 import BeanBag, GET
+    >>> gh = BeanBag("https://api.github.com/")
+    >>> watchers = GET(gh.repos.ajtowns.beanbag.watchers)
+    >>> for w in watchers:
+    ...     print(w["login"])
+
+Setup:
+
+.. code:: python
+
+   >>> import beanbag.v2 as beanbag
+   >>> from beanbag.v2 import GET, POST, PUT, PATCH, DELETE
+   >>> myapi = beanbag.BeanBag("http://hostname/api/")
+
+To constuct URLs, you can use attribute-style access or dict-style access:
+
+.. code:: python
+
+   >>> print(myapi.foo)
+   http://hostname/api/foo
+   >>> print(myapi["bar"])
+   http://hostname/api/bar
+
+You can chain paths as well:
+
+.. code:: python
+
+   >>> print(myapi.foo.bar["baz"][3].xyzzy)
+   http://hostname/api/foo/bar/baz/3/xyzzy
+
+To do a request on a resource that requires a trailing slash:
+
+.. code:: python
+
+   >>> print myapi.foo._
+   http://hostname/api/foo/
+   >>> print myapi.foo[""]
+   http://hostname/api/foo/
+   >>> print myapi.foo["/"]
+   http://hostname/api/foo/
+   >>> print myapi["foo/"]
+   http://hostname/api/foo/
+   >>> print myapi.foo._.x == myapi.foo.x
+   True
+   >>> print myapi.foo["_"]
+   http://hostname/api/foo/_
+
+You can add URL parameters using function calls:
+
+.. code:: python
+
+   >>> print myapi.foo(a=1, b="foo")
+   http://hostname/api/foo?a=1;b=foo
+
+Finally, to actually do REST queries on these queries you can use the
+GET, POST, PUT, PATCH and DELETE functions. The first argument should
+be a BeanBag url, and the second argument (if provided) should be the
+request body, which will be json encoded before being sent. The return
+value is the request's response (decoded from json).
+
+.. code:: python
+
+   >>> res = GET( foo.resource )
+   >>> res = POST( foo.resource, {"a": 12} )
+   >>> DELETE( foo.resource )
+
+To access REST interfaces that require authentication, you need to
+specify a session object when instantiating the BeanBag initially. BeanBag
+supplies helpers to make Kerberos and OAuth 1.0a authentication easier.
+
+BeanBag class
+-------------
+
+.. autoclass:: BeanBag
+   :members:
+   :member-order: bysource
+   :special-members:
+
+
+HTTP Verbs
+----------
+
+Functions are provided for the standard set of HTTP verbs.
+
+.. autofunction:: GET
+.. autofunction:: HEAD
+.. autofunction:: POST
+.. autofunction:: PUT
+.. autofunction:: PATCH
+.. autofunction:: DELETE
+
+The verb function is used to create BeanBag compatible verbs. It is used as:
+
+.. code:: python
+
+   GET = verb("GET")
+
+.. autofunction:: verb
+
+BeanBagException
+----------------
+
+.. autoexception:: BeanBagException
+   :members:
+   :special-members:
+

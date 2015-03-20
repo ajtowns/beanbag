@@ -15,10 +15,19 @@ A simple example:
 
 .. code:: python
 
-   >>> import beanbag
+   >>> import beanbag  # version 1 api
    >>> github = beanbag.BeanBag("https://api.github.com")
    >>> watchers = github.repos.ajtowns.beanbag.watchers()
-   >>> for w in watchers: print(w["login"])
+   >>> for w in watchers:
+   ...     print(w["login"])
+
+.. code:: python
+
+   >>> import beanbag.v2 as beanbag # version 2 api
+   >>> github = beanbag.BeanBag("https://api.github.com")
+   >>> watchers = GET(github.repos.ajtowns.beanbag.watchers)
+   >>> for w in watchers:
+   ...     print(w["login"])
 
 Contents
 --------
@@ -26,6 +35,7 @@ Contents
 .. toctree::
    :maxdepth: 2
 
+   v2.rst
    v1.rst
    auth.rst
    attrdict.rst
