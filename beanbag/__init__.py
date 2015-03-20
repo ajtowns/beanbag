@@ -132,6 +132,7 @@ class BeanBagPath(object):
            >>> del x.res
         """
 
+        if attr == "_": attr = "/"
         return self.__delitem__(attr)
 
     def __delitem__(self, attr):
