@@ -36,7 +36,9 @@ Credits
 Code contributors:
 
  - Anthony Towns <aj@erisian.com.au>
- - Gary Martin <gjm@apache.org> 
+ - Gary Martin <gjm@apache.org>
+ - Lubos Kocman <lkocman@redhat.com>
+ - Daniel Mach <dmach@redhat.com>
 
 Documentation contributors:
 
