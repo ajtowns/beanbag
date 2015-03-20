@@ -11,10 +11,6 @@ from .namespace import SettableHierarchialBase
 from .bbexcept import BeanBagException
 
 import requests
-try:
-    from urlparse import urlparse, parse_qs
-except ImportError:
-    from urllib.parse import urlparse, parse_qs
 
 try:
     import json

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import py.test
-import beanbag
+import beanbag.v1 as beanbag
 import json
 
 class FakeResponse(object):
