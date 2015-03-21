@@ -1,5 +1,5 @@
-beanbag (1.9.0-1) unstable; urgency=low
+beanbag (1.9.1-1) unstable; urgency=low
 
-  * Initial Debianisation.
+  * Initial release (Closes: Bug#780840)
 
  -- Anthony Towns <aj@erisian.com.au>  Wed, 18 Mar 2015 14:58:56 +1000
