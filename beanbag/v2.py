@@ -107,7 +107,7 @@ class BeanBag(HierarchialBase):
             attr = "/"
         return str(attr)
 
-    def get(self, path, el):
+    def _get(self, path, el):
         url, params = path
         el = str(el).lstrip("/")
         if url == "":
