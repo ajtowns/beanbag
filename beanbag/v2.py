@@ -45,7 +45,10 @@ PATCH = verb("PATCH")
 DELETE = verb("DELETE")
 
 
-class BeanBag(HierarchialBase):
+class BeanBagBase(HierarchialBase):
+    __namespace_name__ = 'BeanBag'
+    __no_clever_meta__ = True
+
     mime_json = "application/json"
 
     def __init__(self, base_url, ext = "", session = None):
@@ -168,3 +171,5 @@ class BeanBag(HierarchialBase):
 
         return self.decode(r)
 
+
+BeanBag = BeanBagBase.Namespace
