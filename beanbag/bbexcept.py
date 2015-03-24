@@ -11,24 +11,22 @@ class BeanBagException(Exception):
 
        Data members:
          * msg      -- exception string, brief and human readable
-         * request  -- original request object
          * response -- response object
 
-       Use request and response fields for debugging.
+       You can get the original request via bbe.response.request.
     """
 
-    __slots__ = ('msg', 'response', 'request')
+    __slots__ = ('msg', 'response')
 
-    def __init__(self, msg, response, request):
+    def __init__(self, response, msg):
         """Create a BeanBagException"""
 
         self.msg = msg
         self.response = response
-        self.request = request
 
     def __repr__(self):
-        return "%s(%s,%s,%s)" % (self.__class__.__name__, self.msg,
-          self.response, self.request)
+        return "%s(%s,%r)" % (self.__class__.__name__, self.msg,
+          self.response)
 
     def __str__(self):
         msg = self.msg

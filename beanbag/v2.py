@@ -145,15 +145,13 @@ class BeanBag(HierarchialBase):
             try:
                 ebody = self.encode(body)
             except:
-                raise BeanBagException("Could not encode request body",
-                        None, (body,))
+                raise BeanBagException(None, "Could not encode request body")
 
         r = self.session.request(verb, url, params=params, data=ebody, headers=header_override)
 
         if r.status_code < 200 or r.status_code >= 300:
-            raise BeanBagException( "Bad response code: %d"
-                                      % (r.status_code,),
-                                    r, (verb, url, params, ebody))
+            raise BeanBagException(r, "Bad response code: %d"
+                                      % (r.status_code,))
 
         if not r.content:
             return None
@@ -164,13 +162,11 @@ class BeanBag(HierarchialBase):
         elif res_content.split(";",1)[0] == self.content_type:
             pass
         else:
-            raise BeanBagException("Bad content-type in response (Content-Type: %s; wanted %s)"
-                                     % (res_content.split(";",1)[0],
-                                         self.content_type),
-                                   r, (verb, path, params, ebody))
+            raise BeanBagException(r,
+                    "Bad content-type in response (Content-Type: %s; wanted %s)"
+                        % (res_content.split(";",1)[0], self.content_type))
 
         try:
             return self.decode(r)
         except:
-            raise BeanBagException("Could not decode response",
-                    r, (verb, path, params, ebody))
+            raise BeanBagException(r, "Could not decode response")
