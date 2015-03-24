@@ -69,6 +69,16 @@ class BeanBagBase(HierarchialBase):
         self.session = session
 
     def encode(self, body):
+        """Convert a python object into a request.Request object.
+
+           This function converts the user provided body object (or None
+           when there is no body) into a requests.Request object, by
+           encoding it as JSON string. (Note that the url and method
+           members of the Request are provided later by the 
+
+           :param body: provided by the API user, usually a dict or None
+        """
+
         if isinstance(body, requests.Request):
             req = body
         elif body is None:
@@ -80,6 +90,15 @@ class BeanBagBase(HierarchialBase):
         return req
 
     def decode(self, response):
+        """Converts a requests.Response object to a python object
+
+           This function converts the REST API's response back into a
+           python object by decoding it from JSON (or raises an exception
+           if the response indicates an error).
+
+           :param response: requests.Response object
+        """
+
         if response.status_code < 200 or response.status_code >= 300:
             raise BeanBagException(
                     "Bad response code: %d" % (response.status_code,),
@@ -110,11 +129,14 @@ class BeanBagBase(HierarchialBase):
         return obj
 
     def baseurl(self, path):
+        """Construct the base URL of a resource (excluding URL params)"""
+
         url, params = path
         return "%s%s%s" % (self.base_url, url, self.ext)
 
     def str(self, path):
         """Obtain the URL of a resource"""
+
         url, params = path
         url = self.baseurl(path)
         if params:
@@ -126,6 +148,11 @@ class BeanBagBase(HierarchialBase):
         return ("", {})
 
     def attr(self, attr):
+        """Special processing for attribute access
+
+           This converts ._ to a trailing slash.
+        """
+
         if attr == "_":
             attr = "/"
         return str(attr)
@@ -154,9 +181,24 @@ class BeanBagBase(HierarchialBase):
         return self.namespace((url, newparams))
 
     def invert(self, path):
+        """Provide access to the base/path via the namespace object
+
+           .. code::
+
+              bb = BeanBag(...)
+              base, path = ~bb.foo
+              assert isinstance(base, BeanBagBase)
+
+           This is the little bit of glue needed so that it's possible to
+           call methods defined in BeanBagBase directly rather than just
+           the operators BeanBag supports.
+        """
+
         return self, path
 
     def make_request(self, path, verb, body):
+        """Make a REST request to a resource"""
+
         _, params = path
         req = self.encode(body)
 

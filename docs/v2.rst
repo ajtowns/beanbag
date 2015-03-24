@@ -106,6 +106,20 @@ The verb function is used to create BeanBag compatible verbs. It is used as:
 
 .. autofunction:: verb
 
+BeanBagBase
+-----------
+
+The ``BeanBagBase`` class is available for subclassing. In particular,
+if you need to use something other than JSON for requests or responses,
+subclassing ``BeanBagBase`` and overriding the ``encode`` and ``decode``
+methods is probably what you want to do.
+
+.. autoclass:: BeanBagBase
+   :members:
+   :member-order: bysource
+   :special-members:
+
+
 BeanBagException
 ----------------
 
