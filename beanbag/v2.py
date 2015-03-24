@@ -44,47 +44,67 @@ PUT = verb("PUT")
 PATCH = verb("PATCH")
 DELETE = verb("DELETE")
 
-def bbjsondecode(req):
-    obj = json.loads(req.text or req.content)
-    if isinstance(obj, dict) and len(obj) == 1 and "result" in obj:
-        obj = obj["result"]
-    return obj
 
 class BeanBag(HierarchialBase):
-    def __init__(self, base_url, ext = "", session = None,
-                 fmt='json'):
+    mime_json = "application/json"
+
+    def __init__(self, base_url, ext = "", session = None):
         """Create a BeanBag referencing a base REST path.
 
            :param base_url: the base URL prefix for all resources
            :param ext: extension to add to resource URLs, eg ".json"
            :param session: requests.Session instance used for this API. Useful
                   to set an auth procedure, or change verify parameter.
-           :param fmt: either 'json' for json data, or a tuple specifying a
-                  content-type string, encode function (for encoding the
-                  request body) and a decode function (for decoding responses)
         """
 
         if session is None:
             session = requests.Session()
 
-        if fmt == 'json':
-            content_type = "application/json"
-            encode = json.dumps
-            decode = bbjsondecode
-        else:
-            content_type, encode, decode = fmt
-
         self.base_url = base_url.rstrip("/") + "/"
         self.ext = ext
 
-        self.content_type = content_type
-        self.encode = encode
-        self.decode = decode
-
         self.session = session
 
-        self.session.headers["Accept"] = self.content_type
-        self.session.headers["Content-Type"] = self.content_type
+    def encode(self, body):
+        if isinstance(body, requests.Request):
+            req = body
+        elif body is None:
+            req = requests.Request(data=None, headers={"Accept": self.mime_json})
+        else:
+            req = requests.Request(data=json.dumps(body),
+                    headers={"Accept": self.mime_json,
+                        "Content-Type": self.mime_json})
+        return req
+
+    def decode(self, response):
+        if response.status_code < 200 or response.status_code >= 300:
+            raise BeanBagException(
+                    "Bad response code: %d" % (response.status_code,),
+                    response)
+
+        if not response.content:
+            return None
+
+        res_content = response.headers.get("content-type", None)
+        if res_content is None:
+            pass
+        elif res_content.split(";",1)[0] == self.mime_json:
+            pass
+        else:
+            raise BeanBagException("Bad content-type in response (Content-Type: %s; wanted %s)"
+                                     % (res_content.split(";",1)[0],
+                                         self.mime_json),
+                                   response)
+        try:
+            obj = json.loads(response.text or response.content)
+        except:
+            raise BeanBagException("Could not decode response",
+                    response)
+
+        if isinstance(obj, dict) and len(obj) == 1 and "result" in obj:
+            obj = obj["result"]
+
+        return obj
 
     def baseurl(self, path):
         url, params = path
@@ -135,38 +155,16 @@ class BeanBag(HierarchialBase):
 
     def make_request(self, path, verb, body):
         _, params = path
-        url = self.baseurl(path)
+        req = self.encode(body)
 
-        header_override={}
-        if body is None:
-            ebody = None
-            header_override={"Content-Type": None}
-        else:
-            try:
-                ebody = self.encode(body)
-            except:
-                raise BeanBagException(None, "Could not encode request body")
+        req.url = self.baseurl(path)
+        req.params = params
+        req.method = verb
 
-        r = self.session.request(verb, url, params=params, data=ebody, headers=header_override)
+        p = self.session.prepare_request(req)
+        s = self.session.merge_environment_settings(p.url, {}, None, None, None)
 
-        if r.status_code < 200 or r.status_code >= 300:
-            raise BeanBagException(r, "Bad response code: %d"
-                                      % (r.status_code,))
+        r = self.session.send(request=p, **s)
 
-        if not r.content:
-            return None
+        return self.decode(r)
 
-        res_content = r.headers.get("content-type", None)
-        if res_content is None:
-            pass
-        elif res_content.split(";",1)[0] == self.content_type:
-            pass
-        else:
-            raise BeanBagException(r,
-                    "Bad content-type in response (Content-Type: %s; wanted %s)"
-                        % (res_content.split(";",1)[0], self.content_type))
-
-        try:
-            return self.decode(r)
-        except:
-            raise BeanBagException(r, "Could not decode response")
