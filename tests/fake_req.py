@@ -22,6 +22,27 @@ class FakeSession(object):
         assert self.expecting is None, "Missed request"
         self.expecting = (method, url, params, data)
 
+    def merge_environment_settings(self, *args, **kwargs):
+        return {}
+
+    def prepare_request(self, req):
+        assert req.json is None and req.files == []
+        return req
+
+    def send(self, request, **kwargs):
+        assert not kwargs
+        assert isinstance(request.data, str) or request.data == []
+        data = request.data
+        if not data:
+            data = None
+
+        return self.request(
+                method=request.method,
+                url=request.url,
+                params=request.params,
+                data=data,
+                headers=request.headers)
+
     def request(self, method, url, params=None, data=None, headers=None):
         assert self.expecting is not None, \
                 "Unexpected request: %s %s %s %s" % (method, url, params, data)
