@@ -5,9 +5,6 @@
 # Written by Anthony Towns <aj@erisian.com.au>
 # See LICENSE file.
 
-from __future__ import print_function
-__version__ = '2.0.0'
-
 from .namespace import HierarchialBase
 from .bbexcept import BeanBagException
 
@@ -22,7 +19,10 @@ try:
 except ImportError:
     import simplejson as json
 
+
 __all__ = ['BeanBag', 'verb', 'GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE']
+__version__ = '2.0.0'
+
 
 def verb(verbname):
     """Construct a BeanBag compatible verb function
