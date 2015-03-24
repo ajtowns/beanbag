@@ -29,3 +29,10 @@ def test_bb():
     s.expect("POST", "http://www.example.org/path/foo", data={"a": 1})
     q = b.foo(dict(a=1))
 
+    s.expect("GET", "http://www.example.org/path/foo", params={"result": "/*INVALID*/"})
+    try:
+        q = b.foo(result="/*INVALID*/")
+        assert False, "should have raised exception"
+    except beanbag.BeanBagException as e:
+        assert e.msg == "Could not decode response"
+

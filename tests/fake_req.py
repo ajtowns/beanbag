@@ -4,8 +4,11 @@ import json
 
 class FakeResponse(object):
     def __init__(self, status_code=200, content={}):
+        if not isinstance(content, str):
+            content = json.dumps(content)
+
         self.headers = {"content-type": "application/json"}
-        self.text = self.content = json.dumps(content)
+        self.text = self.content = content
         self.status_code = status_code
 
 _Any = object()
@@ -44,4 +47,11 @@ class FakeSession(object):
         assert exp_method == method and exp_url == url and exp_params == params and exp_data == dec_data
 
         res_obj = dict(method=method, url=url, params=params, data=data)
-        return FakeResponse(content = res_obj)
+        status_code = 200
+
+        if params and "status" in params:
+            status_code = int(params["status"])
+        if params and "result" in params:
+            res_obj = str(params["result"])
+
+        return FakeResponse(status_code=status_code, content=res_obj)
