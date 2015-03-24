@@ -15,15 +15,15 @@ class FakeSession(object):
         self.headers = {}
         self.expecting = None
 
-    def expect(self, verb, path, params=None, data=None):
+    def expect(self, method, url, params=None, data=None):
         assert self.expecting is None, "Missed request"
-        self.expecting = (verb, path, params, data)
+        self.expecting = (method, url, params, data)
 
-    def request(self, verb, path, params=None, data=None, headers=None):
+    def request(self, method, url, params=None, data=None, headers=None):
         assert self.expecting is not None, \
-                "Unexpected request: %s %s %s %s" % (verb, path, params, data)
+                "Unexpected request: %s %s %s %s" % (method, url, params, data)
 
-        exp_verb, exp_path, exp_params, exp_data = self.expecting
+        exp_method, exp_url, exp_params, exp_data = self.expecting
         self.expecting = None
 
         if data is not None:
@@ -31,8 +31,8 @@ class FakeSession(object):
         else:
             dec_data = None
 
-        if exp_verb is _Any: exp_verb = verb
-        if exp_path is _Any: exp_path = path
+        if exp_method is _Any: exp_method = method
+        if exp_url is _Any: exp_url = url
         if exp_params is _Any: exp_params = params
         if exp_data is _Any: exp_data = dec_data
 
@@ -41,7 +41,7 @@ class FakeSession(object):
         if exp_params == {} and params is None:
             exp_params = None
 
-        assert exp_verb == verb and exp_path == path and exp_params == params and exp_data == dec_data
+        assert exp_method == method and exp_url == url and exp_params == params and exp_data == dec_data
 
-        res_obj = dict(verb=verb, path=path, params=params, data=data)
+        res_obj = dict(method=method, url=url, params=params, data=data)
         return FakeResponse(content = res_obj)
