@@ -100,9 +100,8 @@ class BeanBagBase(HierarchialBase):
         """
 
         if response.status_code < 200 or response.status_code >= 300:
-            raise BeanBagException(
-                    "Bad response code: %d" % (response.status_code,),
-                    response)
+            raise BeanBagException(response,
+                    "Bad response code: %d" % (response.status_code,))
 
         if not response.content:
             return None
@@ -113,15 +112,14 @@ class BeanBagBase(HierarchialBase):
         elif res_content.split(";",1)[0] == self.mime_json:
             pass
         else:
-            raise BeanBagException("Bad content-type in response (Content-Type: %s; wanted %s)"
+            raise BeanBagException(response,
+                    "Bad content-type in response (Content-Type: %s; wanted %s)"
                                      % (res_content.split(";",1)[0],
-                                         self.mime_json),
-                                   response)
+                                         self.mime_json))
         try:
             obj = json.loads(response.text or response.content)
         except:
-            raise BeanBagException("Could not decode response",
-                    response)
+            raise BeanBagException(response, "Could not decode response")
 
         if isinstance(obj, dict) and len(obj) == 1 and "result" in obj:
             obj = obj["result"]
