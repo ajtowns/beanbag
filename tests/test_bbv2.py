@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-import py.test
-from beanbag.v2 import BeanBag, GET, POST, PUT, PATCH, DELETE
+import pytest
+from beanbag.v2 import BeanBag, BeanBagException, GET, POST, PUT, PATCH, DELETE
 import json
 from fake_req import FakeSession, _Any
 
@@ -28,4 +28,14 @@ def test_bb():
 
     s.expect("POST", "http://www.example.org/path/foo", data={"a": 1})
     POST(b.foo, dict(a=1))
+
+    s.expect("GET", "http://www.example.org/path/", params=dict(status=300))
+    with pytest.raises(BeanBagException) as e:
+        GET(b(status=300))
+    assert "Bad response code: 300" == e.value.msg
+
+    s.expect("GET", "http://www.example.org/path/", params=dict(result="BAD"))
+    with pytest.raises(BeanBagException) as e:
+        GET(b(result="BAD"))
+    assert "Could not decode response" == e.value.msg
 
