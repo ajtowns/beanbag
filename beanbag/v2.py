@@ -7,6 +7,7 @@
 
 from .namespace import HierarchialBase
 from .bbexcept import BeanBagException
+from .attrdict import AttrDict
 
 import requests
 try:
@@ -20,7 +21,7 @@ except ImportError:
     import simplejson as json
 
 
-__all__ = ['BeanBag', 'verb', 'GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE']
+__all__ = ['BeanBag', 'Request', 'verb', 'GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE']
 __version__ = '2.0.0'
 
 
@@ -43,6 +44,20 @@ POST = verb("POST")
 PUT = verb("PUT")
 PATCH = verb("PATCH")
 DELETE = verb("DELETE")
+
+
+class Request(AttrDict):
+    """Request object
+
+       Request objects act as placeholders for the arguments to
+       the requests() function of the requests.Session being used.
+       They are used as the interface between the encode() and
+       make_request() functions, and may also be used by the API
+       caller.
+    """
+
+    def __init__(self, **kwargs):
+        super(Request, self).__init__(dict(**kwargs))
 
 
 class BeanBagBase(HierarchialBase):
@@ -69,7 +84,7 @@ class BeanBagBase(HierarchialBase):
         self.session = session
 
     def encode(self, body):
-        """Convert a python object into a request.Request object.
+        """Convert a python object into a beanbag.Request object.
 
            This function converts the user provided body object (or None
            when there is no body) into a requests.Request object, by
@@ -79,12 +94,12 @@ class BeanBagBase(HierarchialBase):
            :param body: provided by the API user, usually a dict or None
         """
 
-        if isinstance(body, requests.Request):
+        if isinstance(body, Request):
             req = body
         elif body is None:
-            req = requests.Request(data=None, headers={"Accept": self.mime_json})
+            req = Request(data=None, headers={"Accept": self.mime_json})
         else:
-            req = requests.Request(data=json.dumps(body),
+            req = Request(data=json.dumps(body),
                     headers={"Accept": self.mime_json,
                         "Content-Type": self.mime_json})
         return req
@@ -199,15 +214,15 @@ class BeanBagBase(HierarchialBase):
 
         _, params = path
         req = self.encode(body)
+        assert isinstance(req, Request)
+        assert "url" not in req and "method" not in req and "params" not in req
+        req = +req # convert to dictionary
 
-        req.url = self.baseurl(path)
-        req.params = params
-        req.method = verb
+        url = self.baseurl(path)
+        params = params
+        method = verb
 
-        p = self.session.prepare_request(req)
-        s = self.session.merge_environment_settings(p.url, {}, None, None, None)
-
-        r = self.session.send(request=p, **s)
+        r = self.session.request(method=method, url=url, params=params, **req)
 
         return self.decode(r)
 
