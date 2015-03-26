@@ -27,7 +27,7 @@ A simple example:
    >>> github = beanbag.BeanBag("https://api.github.com")
    >>> watchers = GET(github.repos.ajtowns.beanbag.watchers)
    >>> for w in watchers:
-   ...     print(w["login"])
+   ...     print(w.login)
 
 Contents
 --------

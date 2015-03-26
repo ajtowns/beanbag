@@ -139,6 +139,9 @@ class BeanBagBase(HierarchialBase):
         if isinstance(obj, dict) and len(obj) == 1 and "result" in obj:
             obj = obj["result"]
 
+        if isinstance(obj, dict):
+            obj = AttrDict(obj)
+
         return obj
 
     def baseurl(self, path):
