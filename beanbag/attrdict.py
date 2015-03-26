@@ -21,17 +21,24 @@ class AttrDict(namespace.SettableHierarchialBase):
     def repr(self, path):
         return "<%s(%s)>" % (self.Namespace.__name__, ".".join(map(str, path)))
 
+    def item(self, item):
+        return item
+
     def descend(self, path, create=True):
         base = self.basedict
         for p in path:
-            if p not in base:
+            try:
+                base = base[p]
+            except:
                 if isinstance(create, type) and issubclass(create, Exception):
                     raise create(p)
-                elif create:
+                elif create and isinstance(base, dict):
                     base[p] = {}
-                else:
+                    base = base[p]
+                elif not create:
                     return None
-            base = base[p]
+                else:
+                    raise
         return base
 
     def pos(self, path):
@@ -44,7 +51,7 @@ class AttrDict(namespace.SettableHierarchialBase):
 
     def get(self, path):
         o = self.descend(path, create=False)
-        if isinstance(o, dict) or o is None:
+        if isinstance(o, dict) or isinstance(o, list) or o is None:
             return self.namespace(path)
         else:
             return o
