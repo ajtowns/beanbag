@@ -40,6 +40,7 @@ Contents
    auth.rst
    attrdict.rst
    namespace.rst
+   examples.rst
 
 Credits
 -------
