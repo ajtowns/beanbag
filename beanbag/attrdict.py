@@ -7,16 +7,16 @@ class AttrDict(namespace.SettableHierarchialBase):
     """Allow access to dictionary via attributes as well as
        array-style references."""
 
-    def __init__(self, basedict=None):
+    def __init__(self, base=None):
         """Provide an AttrDict view of a dictionary.
 
-        :param basedict: dictionary to be viewed
+        :param base: dictionary/list to be viewed
         """
 
-        if basedict is None:
-            self.basedict = {}
+        if base is None:
+            self.base = {}
         else:
-            self.basedict = basedict
+            self.base = base
 
     def repr(self, path):
         return "<%s(%s)>" % (self.Namespace.__name__, ".".join(map(str, path)))
@@ -25,7 +25,7 @@ class AttrDict(namespace.SettableHierarchialBase):
         return item
 
     def descend(self, path, create=True):
-        base = self.basedict
+        base = self.base
         for p in path:
             try:
                 base = base[p]
@@ -76,7 +76,11 @@ class AttrDict(namespace.SettableHierarchialBase):
         return val in self.pos(path)
 
     def iter(self, path):
-        return self.pos(path).__iter__()
+        p = self.pos(path)
+        if isinstance(p, list):
+            return (self.namespace(path + (i,)) for i in range(len(p)))
+        else:
+            return self.pos(path).__iter__()
 
     def len(self, path):
         return self.pos(path).__len__()
