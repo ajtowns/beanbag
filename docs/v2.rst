@@ -41,24 +41,24 @@ To do a request on a resource that requires a trailing slash:
 
 .. code:: python
 
-   >>> print myapi.foo._
+   >>> print(myapi.foo._)
    http://hostname/api/foo/
-   >>> print myapi.foo[""]
+   >>> print(myapi.foo[""])
    http://hostname/api/foo/
-   >>> print myapi.foo["/"]
+   >>> print(myapi.foo["/"])
    http://hostname/api/foo/
-   >>> print myapi["foo/"]
+   >>> print(myapi["foo/"])
    http://hostname/api/foo/
-   >>> print myapi.foo._.x == myapi.foo.x
+   >>> print(myapi.foo._.x == myapi.foo.x)
    True
-   >>> print myapi.foo["_"]
+   >>> print(myapi.foo["_"])
    http://hostname/api/foo/_
 
 You can add URL parameters using function calls:
 
 .. code:: python
 
-   >>> print myapi.foo(a=1, b="foo")
+   >>> print(myapi.foo(a=1, b="foo"))
    http://hostname/api/foo?a=1;b=foo
 
 Finally, to actually do REST queries on these queries you can use the
