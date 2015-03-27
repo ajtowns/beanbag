@@ -53,5 +53,5 @@ is not a valid part of an attribute). The ``ext=`` keyword argument of the
 for all URLs in the Twitter API.
 
 .. literalinclude:: ../examples/twitter
-
+   :language: python
 
