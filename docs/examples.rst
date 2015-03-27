@@ -52,6 +52,6 @@ is not a valid part of an attribute). The ``ext=`` keyword argument of the
 ``BeanBag`` constructor is used to supply this as the standard extension
 for all URLs in the Twitter API.
 
-.. literalinclude:: ../examples/twitter_example
+.. literalinclude:: ../examples/twitter
 
 
