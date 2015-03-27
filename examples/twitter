@@ -22,7 +22,9 @@ session.auth = oauthDance.oauth()
 twitter = beanbag.BeanBag("https://api.twitter.com/1.1/", ext=".json",
                           session=session)
 
-x = twitter.statuses.user_timeline(screen_name="ajtowns", count=7)
-for tweet in x:
-    print repr(tweet["text"])
+myacct = twitter.account.settings()
+me = myacct["screen_name"]
+tweets = twitter.statuses.user_timeline(screen_name=me, count=7)
+for tweet in tweets:
+    print(repr(tweet["text"]))
 
