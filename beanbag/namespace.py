@@ -302,7 +302,7 @@ class SettableHierarchialBase(HierarchialBase):
 
     def setitem(self, path, item, val):
         """self[item] = val"""
-        return self.__set(self._get(path, self.item(item)))
+        return self.__set(self._get(path, self.item(item)), val)
 
     def delattr(self, path, attr):
         """del self.attr"""
