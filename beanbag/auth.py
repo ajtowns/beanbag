@@ -137,7 +137,7 @@ class OAuth10aDance(object):
 
         oauth = self.OAuth1(self.client_key, client_secret=self.client_secret)
         r = requests.post(url=self.req_token, auth=oauth)
-        credentials = parse_qs(r.content)
+        credentials = parse_qs(r.content.decode('utf-8'))
 
         self.user_key = credentials.get('oauth_token', [""])[0]
         self.user_secret = credentials.get('oauth_token_secret', [""])[0]
@@ -153,7 +153,7 @@ class OAuth10aDance(object):
                        resource_owner_secret=self.user_secret,
                        verifier=verifier)
         r = requests.post(url=self.acc_token, auth=oauth)
-        credentials = parse_qs(r.content)
+        credentials = parse_qs(r.content.decode('utf-8'))
 
         self.user_key = credentials.get('oauth_token', [""])[0]
         self.user_secret = credentials.get('oauth_token_secret', [""])[0]
