@@ -53,10 +53,26 @@ class Request(AttrDict):
        They are used as the interface between the encode() and
        make_request() functions, and may also be used by the API
        caller.
+
+       NB: A Request object is only suitable for one use, as it may
+       be modified in-place during the request. For this reason,
+       __init__ makes a (shallow) copy of all the keyword arguments
+       supplied rather than using them directly.
     """
 
     def __init__(self, **kwargs):
-        (~AttrDict).__init__(self, dict(**kwargs))
+        for badarg in ["method", "url", "params"]:
+            if badarg in kwargs:
+                raise TypeError("__init__() got forbidden keyword argument '%s'" % (badarg,))
+
+        d = {}
+        for k, v in kwargs.items():
+            if isinstance(v, list):
+                v = v[:]
+            elif isinstance(v, dict):
+                v = v.copy()
+            d[k] = v
+        (~AttrDict).__init__(self, d)
 
 
 class BeanBag(HierarchialNS):
