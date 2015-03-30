@@ -35,5 +35,6 @@ attrdict: ...``) and as a container (``if key in attrdict: ...``).
 
 .. autoclass:: AttrDict
    :members:
+   :exclude-members: .base
    :special-members:
 

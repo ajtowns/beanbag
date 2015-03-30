@@ -17,11 +17,14 @@ for splitting these apart is mostly efficiency -- the path element needs
 to be cheap and easy to construct and copy since that may need to happen
 for an attribute access.
 
-The base is provided by instantiating an instance of a Base class
-defined by the user. This class defines the behaviour of any of the
-special methods the namespace will have. For example, to define the
-behavour of the ``~`` operator (aka ``__invert__(self)``), the Base class
-defines a method:
+To define a namespace you provide a class that inherits from
+``beanbag.namespace.Namespace`` and defines the methods the base class
+should have. The ``NamespaceMeta`` metaclass then creates a new base
+class containing these methods, and builds the namespace class on
+top of that base class, mapping Python's special method names to the
+corresponding base class methods, minus the underscores. For example,
+to define the behavour of the ``~`` operator (aka ``__invert__(self)``),
+the Base class defines a method:
 
 .. code:: python
 
@@ -49,7 +52,7 @@ where ``a[i] += j`` is converted into:
 In particular, implementations of ``setitem`` and ``setattr`` can avoid
 poor behaviour here by testing whether the value being set (``res``)
 is already the existing value, and performing a no-op if so. The
-``SettableHierarchialBase`` class implements this behaviour.
+``SettableHierarchialNS`` class implements this behaviour.
 
 NamespaceMeta
 -------------
@@ -57,18 +60,7 @@ NamespaceMeta
 The ``NamespaceMeta`` metaclass provides the magic for creating arbitrary
 namespaces from Base classes as discussed above. When set as the metaclass
 for a class, it will turn a base class into a namespace class directly,
-renaming the base class by appending "Base" to the provided name.
-
-This behaviour can be tweaked in two ways:
-
- * Defining ``__namespace_name__`` as part of the class definition leaves
-   the base class's name alone and sets the namespace class's name
-   directly.
-
- * Defining ``__no_clever_meta__`` prevents the base class from being
-   replaced at all. If it isn't explicitly specified via the previous
-   attribute, the namespace class's name will be the base class's name
-   with "NS" added to the end.
+while constructing an appropriate base class for the namespace to use.
 
 .. autoclass:: NamespaceMeta
    :members:
@@ -78,17 +70,30 @@ This behaviour can be tweaked in two ways:
 NamespaceBase
 -------------
 
-``NamespaceBase`` provides a trivial Base implementation. It's primarily
-useful as a parent class for inheritance, so that you don't have
-explicitly set ``NamespaceMeta`` as your metaclass.
+The generated base class will inherit from ``NamespaceBase``
+(or the base class corresponding to any namespaces the namespace class
+inherits from), and will have a ``Namespace`` attribute referencing the
+namespace class. Further, the generated base class can be accessed by
+using the inverse opertor on the namespace class, ie ``MyNamespaceBase
+= ~MyNamespace``.
 
 .. autoclass:: NamespaceBase
    :members:
 
-HierarchialBase
----------------
+Namespace
+---------
 
-``HierarchialBase`` provides a simple basis for producing namespaces with
+``Namespace`` provides a trivial Base implementation. It's primarily
+useful as a parent class for inheritance, so that you don't have
+explicitly set ``NamespaceMeta`` as your metaclass.
+
+.. autoclass:: Namespace
+   :members:
+
+HierarchialNS
+-------------
+
+``HierarchialNS`` provides a simple basis for producing namespaces with
 freeform attribute and item hierarchies, eg, where you might have something
 like ``ns.foo.bar["baz"]``.
 
@@ -100,16 +105,17 @@ and ``item`` methods can be overridden respectively.
 Otherwise, to get useful behaviour from this class, you probably want to
 provide some additional methods, such as ``__call__``.
 
-.. autoclass:: HierarchialBase
+.. autoclass:: HierarchialNS
+   :exclude-members: .base
    :show-inheritance:
    :members:
    :special-members:
    :undoc-members:
 
-SettableHierarchialBase
------------------------
+SettableHierarchialNS
+---------------------
 
-``SettableHierarchialBase`` is intended to make life slightly easier if you
+``SettableHierarchialNS`` is intended to make life slightly easier if you
 want to be able to assign to your hierarchial namespace. It provides ``set``
 and ``delete`` methods that you can implement, without having to go to the
 trouble of implementing both item and attribute variants of both functions.
@@ -118,8 +124,9 @@ This class implements the check for "setting to self" mentioned earlier in
 order to prevent inplace operations having two effects. It uses the ``eq``
 method to test for equality.
 
-.. autoclass:: SettableHierarchialBase
+.. autoclass:: SettableHierarchialNS
    :show-inheritance:
+   :exclude-members: .base
    :members:
    :special-members:
    :undoc-members:

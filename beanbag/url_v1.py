@@ -7,7 +7,7 @@
 
 from __future__ import print_function
 
-from .namespace import SettableHierarchialBase
+from .namespace import SettableHierarchialNS
 from .bbexcept import BeanBagException
 
 import requests
@@ -19,7 +19,7 @@ except ImportError:
 
 __all__ = ['BeanBag', 'BeanBagException']
 
-class BeanBag(SettableHierarchialBase):
+class BeanBag(SettableHierarchialNS):
     def __init__(self, base_url, ext = "", session = None,
                  fmt='json'):
         """Create a BeanBag referencing a base REST path.

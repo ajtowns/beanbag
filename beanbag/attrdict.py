@@ -3,7 +3,7 @@
 from . import namespace
 
 
-class AttrDict(namespace.SettableHierarchialBase):
+class AttrDict(namespace.SettableHierarchialNS):
     """Allow access to dictionary via attributes as well as
        array-style references."""
 

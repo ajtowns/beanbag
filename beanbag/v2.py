@@ -5,7 +5,7 @@
 # Written by Anthony Towns <aj@erisian.com.au>
 # See LICENSE file.
 
-from .namespace import HierarchialBase
+from .namespace import HierarchialNS
 from .bbexcept import BeanBagException
 from .attrdict import AttrDict
 
@@ -57,13 +57,10 @@ class Request(AttrDict):
     """
 
     def __init__(self, **kwargs):
-        super(Request, self).__init__(dict(**kwargs))
+        (~AttrDict).__init__(self, dict(**kwargs))
 
 
-class BeanBagBase(HierarchialBase):
-    __namespace_name__ = 'BeanBag'
-    __no_clever_meta__ = True
-
+class BeanBag(HierarchialNS):
     mime_json = "application/json"
 
     def __init__(self, base_url, ext = "", session = None):
@@ -229,5 +226,3 @@ class BeanBagBase(HierarchialBase):
 
         return self.decode(r)
 
-
-BeanBag = BeanBagBase.Namespace

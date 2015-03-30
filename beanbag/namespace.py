@@ -79,62 +79,89 @@ def sig_adapt(sigfn, dropargs=None, name=None):
 
 
 class NamespaceMeta(type):
+    # attr ops are special because we have magic ".base" and ".path" attributes
+    ops_attr = ["getattr", "setattr", "delattr"]
+
     # number ops are special since they have reverse and inplace variants
-    num_ops = "add sub mul pow div floordiv lshift rshift and or xor".split()
+    __ops_num = "add sub mul pow div floordiv lshift rshift and or xor".split()
 
-    inum_ops = ["i"+_x for _x in num_ops]
+    ops_inum = ["i"+_x for _x in __ops_num]
 
+    # other ops
     ops = ("repr str call bool"   # standard
            " getitem setitem delitem len iter reversed contains"   # container
            " enter exit"          # context
            " pos neg invert"      # unary
            " eq ne lt le gt ge"   # comparsion
            # "cmp rcmp hash unicode", # maybe should do these too?
-          ).split() + num_ops + ["r"+_x for _x in num_ops]
+          ).split() + __ops_num + ["r"+_x for _x in __ops_num]
 
     def __new__(mcls, name, bases, nmspc):
-        if "__namespace_name__" in nmspc:
-            clsname = name
-            nsname = nmspc["__namespace_name__"]
-        else:
-            if "__no_clever_meta__" in nmspc:
-                clsname = name
-                nsname = name + "NS"
-            else:
-                clsname = name + "Base"
-                nsname = name
+        basebases = tuple(~cls for cls in bases if isinstance(cls, mcls))
+        if not basebases:
+            basebases = (NamespaceBase,)
 
-        cls = type.__new__(mcls, clsname, bases, nmspc)
-        if clsname != name and sys.version_info[0] > 2:
-            cls.__qualname__ = clsname
+        qn = None
+        if "__qualname__" in nmspc:
+            qn = nmspc["__qualname__"]
+            nmspc["__qualname__"] = qn+"Base"
 
-        NS, new = mcls.make_namespace(cls, name=nsname)
-        cls.Namespace = NS
-        cls.namespace = new
+        basecls = type.__new__(type, name+"Base", basebases, nmspc)
 
-        if "__no_clever_meta__" in nmspc:
-            return cls
-        else:
-            return NS
+        conv_nmspc = mcls.make_namespace(basecls)
+
+        if "__module__" in nmspc:
+            conv_nmspc["__module__"] = nmspc["__module__"]
+        if qn is not None:
+            conv_nmspc["__qualname__"] = qn
+
+        cls = type.__new__(mcls, name, bases, conv_nmspc)
+        basecls.Namespace = cls
+
+        return cls
+
+    def __invert__(cls):
+        """Obtain base class for namespace"""
+        return getattr(cls, ".base")
+
+    @staticmethod
+    def wrap_path_fn(basefn):
+        def fn(self, *args, **kwargs):
+            return basefn(getattr(self, ".base"), getattr(self, ".path"),
+                          *args, **kwargs)
+        return fn
+
+    @staticmethod
+    def wrap_path_fn_inum(basefn):
+        def fn(self, *args, **kwargs):
+            r = basefn(getattr(self, ".base"), getattr(self, ".path"),
+                       *args, **kwargs)
+            if r is None:
+                r = self
+            return r
+        return fn
+
+    @staticmethod
+    def wrap_path_fn_attr(basefn):
+        def fn(self, attr, *args, **kwargs):
+            if attr.startswith("."):
+                return object.__setattr__(self, attr, *args, **kwargs)
+            return basefn(getattr(self, ".base"), getattr(self, ".path"), attr, *args, **kwargs)
+        return fn
 
     @classmethod
-    def deferfn(mcls, cls, nscls, basefnname, inplace=False):
+    def deferfn(mcls, cls, nsdict, basefnname, inum=False, attr=False):
         if not hasattr(cls, basefnname):
             return   # not implemented so nothing to do
 
         basefn = getattr(cls, basefnname)
 
-        if not inplace:
-            def fn(self, *args, **kwargs):
-                return basefn(self._Namespace__base, self._Namespace__path,
-                              *args, **kwargs)
+        if inum:
+            fn = mcls.wrap_path_fn_inum(basefn)
+        elif attr:
+            fn = mcls.wrap_path_fn_attr(basefn)
         else:
-            def fn(self, *args, **kwargs):
-                r = basefn(self._Namespace__base, self._Namespace__path,
-                           *args, **kwargs)
-                if r is None:
-                    r = self
-                return r
+            fn = mcls.wrap_path_fn(basefn)
 
         fname = "__%s__" % (basefnname,)
         if basefnname == "bool" and sys.version_info[0] == 2:
@@ -142,82 +169,58 @@ class NamespaceMeta(type):
 
         fn = sig_adapt(basefn, dropargs=(1,), name=fname)(fn)
 
-        setattr(nscls, fname, fn)
-        return fn
+        nsdict[fname] = fn
 
     @classmethod
-    def make_namespace(mcls, cls, name=None):
+    def make_namespace(mcls, cls):
         """create a unique Namespace class based on provided class"""
 
-        if name is None:
-            name = cls.__name__
-
-        class Namespace(object):
-            __slots__ = ("__base", "__path")
-            __basecls = cls
-
-            if hasattr(cls, "getattr"):
-                @sig_adapt(cls.getattr, dropargs=(1,), name="__getattr__")
-                def __getattr__(self, a):
-                    if a.startswith("_Namespace__") or a.startswith("__"):
-                        raise AttributeError(
-                                "%s object '%s' has no attribute '%s'" %
-                                  (self.__class__.__name__, repr(self), a))
-                    r = self.__base.getattr(self.__path, a)
-                    return r
-
-            if hasattr(cls, "setattr"):
-                @sig_adapt(cls.setattr, dropargs=(1,), name="__setattr__")
-                def __setattr__(self, a, val):
-                    if a.startswith("_Namespace__") or a.startswith("__"):
-                        return object.__setattr__(self, a, val)
-                    return self.__base.setattr(self.__path, a, val)
-
-            if hasattr(cls, "delattr"):
-                @sig_adapt(cls.delattr, dropargs=(1,), name="__delattr__")
-                def __delattr__(self, a):
-                    if a.startswith("_Namespace__") or a.startswith("__"):
-                        return object.__delattr__(self, a)
-                    return self.__base.delattr(self.__path, a)
+        clsnmspc = {}
 
         for op in mcls.ops:
-            mcls.deferfn(cls, Namespace, op)
+            mcls.deferfn(cls, clsnmspc, op)
 
-        for op in mcls.inum_ops:
-            mcls.deferfn(cls, Namespace, op, inplace=True)
+        for op in mcls.ops_inum:
+            mcls.deferfn(cls, clsnmspc, op, inum=True)
+
+        for op in mcls.ops_attr:
+            mcls.deferfn(cls, clsnmspc, op, attr=True)
 
         def init(self, *args, **kwargs):
-            self._Namespace__base = cls(*args, **kwargs)
-            self._Namespace__path = self._Namespace__base.path()
+            b = cls(*args, **kwargs)
+            setattr(self, ".base", b)
+            setattr(self, ".path", b.path())
         if "__init__" in cls.__dict__:
             init = sig_adapt(cls.__init__)(init)
-        Namespace.__init__ = init
+        clsnmspc["__init__"] = init
 
-        Namespace.__name__ = name
-        Namespace.__qualname__ = name
-        Namespace.__module__ = cls.__module__
+        clsnmspc[".base"] = cls
 
-        def namespace(self, path=None):
-            """Used to create a new Namespace object from the Base class"""
-            if path is None:
-                path = self.path()
-            r = Namespace.__new__(Namespace)
-            r._Namespace__base = self
-            r._Namespace__path = path
-            return r
+        return clsnmspc
 
-        return Namespace, namespace
+
+class NamespaceBase(object):
+    """Base class for user-defined namespace classes' bases"""
+
+    Namespace = None
+    """Replaced in subclasses by the corresponding namespace class"""
+
+    def namespace(self, path=None):
+        """Used to create a new Namespace object from the Base class"""
+        if path is None:
+            path = self.path()
+        r = self.Namespace.__new__(self.Namespace)
+        setattr(r, ".base", self)
+        setattr(r, ".path", path)
+        return r
 
 
 # setup base class so can use metaclass via inheritance
 # (this is the only common syntax for using metaclasses that works
 # with both py2 and py3)
-NamespaceBase = type.__new__(NamespaceMeta, "NamespaceBase", (object,), {})
+Namespace = NamespaceMeta.__new__(NamespaceMeta, "Namespace", (object,), {})
 
-
-class HierarchialBase(NamespaceBase):
-    __no_clever_meta__ = True
-
+class HierarchialNS(Namespace):
     def __init__(self):
         pass
 
@@ -271,9 +274,7 @@ class HierarchialBase(NamespaceBase):
         return self.get(self._get(path, self.item(item)))
 
 
-class SettableHierarchialBase(HierarchialBase):
-    __no_clever_meta__ = True
-
+class SettableHierarchialNS(HierarchialNS):
     def set(self, path, val):
         """self.path = val or self[path] = val"""
         raise NotImplementedError
@@ -282,15 +283,17 @@ class SettableHierarchialBase(HierarchialBase):
         """del self.path or del self[path]"""
         raise NotImplementedError
 
-    def __set(self, path, val):
-        # helper function to avoid calling self.set() when doing inplace ops
-        # Normally python will convert:
-        #     self.path += val
-        # into
-        #     a = self.path
-        #     self.path = a.__iadd__(val)
-        # which is useful if __iadd__ doesn't just return self, but not
-        # desirable here
+    def _set(self, path, val):
+        """Helper function to avoid calling self.set() when doing inum ops
+
+           Normally python will convert:
+               self.path += val
+           into
+               a = self.path
+               self.path = a.__iadd__(val)
+           which is useful if __iadd__ doesn't just return self, but not
+           desirable here
+        """
 
         if self.eq(path, val):
             return None
@@ -298,11 +301,11 @@ class SettableHierarchialBase(HierarchialBase):
 
     def setattr(self, path, attr, val):
         """self.attr = val"""
-        return self.__set(self._get(path, self.attr(attr)), val)
+        return self._set(self._get(path, self.attr(attr)), val)
 
     def setitem(self, path, item, val):
         """self[item] = val"""
-        return self.__set(self._get(path, self.item(item)), val)
+        return self._set(self._get(path, self.item(item)), val)
 
     def delattr(self, path, attr):
         """del self.attr"""

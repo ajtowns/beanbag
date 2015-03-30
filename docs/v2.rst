@@ -80,10 +80,21 @@ supplies helpers to make Kerberos and OAuth 1.0a authentication easier.
 BeanBag class
 -------------
 
+The BeanBag class does all the magic described above, using
+``beanbag.namespace``.
+
 .. autoclass:: BeanBag
    :members:
+   :exclude-members: .base
    :member-order: bysource
    :special-members:
+
+This class can be subclassed. In particular, if you need to use something
+other than JSON for requests or responses, subclassing ``BeanBagBase``
+and overriding the ``encode`` and ``decode`` methods is probably what you
+want to do. One caveat: due to the way ``beanbag.namespace`` works, if you
+wish to invoke the parent classes method, you'll usually need the parent
+`base` class, accessed via ``~BeanBag`` or ``super(~SubClass, self)``.
 
 
 HTTP Verbs
@@ -105,19 +116,6 @@ The verb function is used to create BeanBag compatible verbs. It is used as:
    GET = verb("GET")
 
 .. autofunction:: verb
-
-BeanBagBase
------------
-
-The ``BeanBagBase`` class is available for subclassing. In particular,
-if you need to use something other than JSON for requests or responses,
-subclassing ``BeanBagBase`` and overriding the ``encode`` and ``decode``
-methods is probably what you want to do.
-
-.. autoclass:: BeanBagBase
-   :members:
-   :member-order: bysource
-   :special-members:
 
 
 BeanBagException
