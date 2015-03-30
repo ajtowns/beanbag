@@ -11,7 +11,7 @@ A quick example:
     >>> gh = BeanBag("https://api.github.com/")
     >>> watchers = GET(gh.repos.ajtowns.beanbag.watchers)
     >>> for w in watchers:
-    ...     print(w["login"])
+    ...     print(w.login)
 
 Setup:
 

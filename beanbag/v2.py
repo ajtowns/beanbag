@@ -63,13 +63,16 @@ class Request(AttrDict):
 class BeanBag(HierarchialNS):
     mime_json = "application/json"
 
-    def __init__(self, base_url, ext = "", session = None):
+    def __init__(self, base_url, ext = "", session = None, use_attrdict=True):
         """Create a BeanBag referencing a base REST path.
 
            :param base_url: the base URL prefix for all resources
            :param ext: extension to add to resource URLs, eg ".json"
            :param session: requests.Session instance used for this API. Useful
                   to set an auth procedure, or change verify parameter.
+           :param use_attrdict: if true, ``decode()`` will wrap dicts and
+                  lists in a ``beanbag.attrdict.AttrDict`` for syntactic
+                  sugar.
         """
 
         if session is None:
@@ -79,6 +82,7 @@ class BeanBag(HierarchialNS):
         self.ext = ext
 
         self.session = session
+        self.use_attrdict = use_attrdict
 
     def encode(self, body):
         """Convert a python object into a beanbag.Request object.
@@ -133,11 +137,9 @@ class BeanBag(HierarchialNS):
         except:
             raise BeanBagException(response, "Could not decode response")
 
-        if isinstance(obj, dict) and len(obj) == 1 and "result" in obj:
-            obj = obj["result"]
-
-        if isinstance(obj, dict):
-            obj = AttrDict(obj)
+        if self.use_attrdict:
+            if isinstance(obj, dict) or isinstance(obj, list):
+                obj = AttrDict(obj)
 
         return obj
 
