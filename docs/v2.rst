@@ -118,6 +118,33 @@ The verb function is used to create BeanBag compatible verbs. It is used as:
 .. autofunction:: verb
 
 
+Request
+-------
+
+The ``Request`` class serves as a place holder for arguments to
+``requests.Session.request``.  Normally this is constructed from a dict
+object passed to ``POST`` or ``PUT`` via ``json.dumps()`` however a
+``Request`` object can also be created by hand and passed in as the
+``body`` parameter in a ``POST`` or similar ``BeanBag`` request. For
+example to make a POST request with a body that isn't valid JSON:
+
+.. code:: python
+
+   POST(bbexample.path.to.resource, Request(body="MAGIC STRING"))
+
+This can be useful with GET requests as well, even though GET requests
+don't have a body per se:
+
+.. code:: python
+
+   GET(bbexample.path.to.resource, Request(headers={"X-Magic": "String"}))
+
+.. autoclass:: Request
+   :members: __init__
+   :show-inheritance:
+   :undoc-members:
+   :special-members:
+
 BeanBagException
 ----------------
 

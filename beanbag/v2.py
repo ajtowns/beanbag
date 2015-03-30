@@ -46,21 +46,21 @@ DELETE = verb("DELETE")
 
 
 class Request(AttrDict):
-    """Request object
-
-       Request objects act as placeholders for the arguments to
-       the requests() function of the requests.Session being used.
-       They are used as the interface between the encode() and
-       make_request() functions, and may also be used by the API
-       caller.
-
-       NB: A Request object is only suitable for one use, as it may
-       be modified in-place during the request. For this reason,
-       __init__ makes a (shallow) copy of all the keyword arguments
-       supplied rather than using them directly.
-    """
-
     def __init__(self, **kwargs):
+        """Create a Request object
+
+           Request objects act as placeholders for the arguments to
+           the requests() function of the requests.Session being used.
+           They are used as the interface between the encode() and
+           make_request() functions, and may also be used by the API
+           caller.
+
+           NB: A Request object is only suitable for one use, as it may
+           be modified in-place during the request. For this reason,
+           __init__ makes a (shallow) copy of all the keyword arguments
+           supplied rather than using them directly.
+        """
+
         for badarg in ["method", "url", "params"]:
             if badarg in kwargs:
                 raise TypeError("__init__() got forbidden keyword argument '%s'" % (badarg,))
