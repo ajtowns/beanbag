@@ -29,7 +29,10 @@ def verb(verbname):
 
     def do(url, body=None):
         base, path = ~url
-        return base.make_request(path, verbname, body)
+        req = base.encode(body)
+        res = base.make_request(path, verbname, req)
+        return base.decode(res)
+
     do.__name__ = verbname
     do.__doc__ = "%s verb function" % (verbname,)
     return do
@@ -139,17 +142,16 @@ class BeanBag(HierarchialNS):
 
         return obj
 
-    def baseurl(self, path):
+    def baseurl_params(self, path):
         """Construct the base URL of a resource (excluding URL params)"""
 
         url, params = path
-        return "%s%s%s" % (self.base_url, url, self.ext)
+        return ("%s%s%s" % (self.base_url, url, self.ext)), params
 
     def str(self, path):
         """Obtain the URL of a resource"""
 
-        url, params = path
-        url = self.baseurl(path)
+        url, params = self.baseurl_params(path)
         if params:
             url = "%s?%s" % (url, ";".join("%s=%s" % (str(k), str(v))
                         for k, v in params.items() if v is not None))
@@ -207,20 +209,14 @@ class BeanBag(HierarchialNS):
 
         return self, path
 
-    def make_request(self, path, verb, body):
+    def make_request(self, path, verb, request):
         """Make a REST request to a resource"""
 
-        _, params = path
-        req = self.encode(body)
-        assert isinstance(req, Request)
-        assert "url" not in req and "method" not in req and "params" not in req
-        req = +req # convert to dictionary
+        url, params = self.baseurl_params(path)
 
-        url = self.baseurl(path)
-        params = params
-        method = verb
+        assert isinstance(request, Request)
+        request = +request   # convert to dictionary
 
-        r = self.session.request(method=method, url=url, params=params, **req)
-
-        return self.decode(r)
+        return self.session.request(
+                method=verb, url=url, params=params, **request)
 
