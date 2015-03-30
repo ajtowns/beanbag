@@ -17,10 +17,12 @@ try:
 except ImportError:
     import simplejson as json
 
+
 __all__ = ['BeanBag', 'BeanBagException']
 
+
 class BeanBag(SettableHierarchialNS):
-    def __init__(self, base_url, ext = "", session = None,
+    def __init__(self, base_url, ext="", session=None,
                  fmt='json'):
         """Create a BeanBag referencing a base REST path.
 
@@ -156,7 +158,7 @@ class BeanBag(SettableHierarchialNS):
             return None
 
         ctype = r.headers.get("content-type", self.content_type)
-        ctype = ctype.split(";",1)[0]
+        ctype = ctype.split(";", 1)[0]
         if ctype != self.content_type:
             raise BeanBagException(r,
                     "Bad content-type in response (Content-Type: %s)"

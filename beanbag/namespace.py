@@ -56,7 +56,7 @@ def sig_adapt(sigfn, dropargs=None, name=None):
                 odefs = spec[3]
                 nodefs = len(spec[0]) - len(odefs)
                 defs = [odefs[i] for i, arg in enumerate(spec[0][-len(odefs):])
-                        if i+nodefs not in dropargs and arg not in dropargs]
+                        if i + nodefs not in dropargs and arg not in dropargs]
             else:
                 defs = []
 
@@ -85,7 +85,7 @@ class NamespaceMeta(type):
     # number ops are special since they have reverse and inplace variants
     __ops_num = "add sub mul pow div floordiv lshift rshift and or xor".split()
 
-    ops_inum = ["i"+_x for _x in __ops_num]
+    ops_inum = ["i" + _x for _x in __ops_num]
 
     # other ops
     ops = ("repr str call bool"   # standard
@@ -94,7 +94,7 @@ class NamespaceMeta(type):
            " pos neg invert"      # unary
            " eq ne lt le gt ge"   # comparsion
            # "cmp rcmp hash unicode", # maybe should do these too?
-          ).split() + __ops_num + ["r"+_x for _x in __ops_num]
+          ).split() + __ops_num + ["r" + _x for _x in __ops_num]
 
     def __new__(mcls, name, bases, nmspc):
         basebases = tuple(~cls for cls in bases if isinstance(cls, mcls))
@@ -104,9 +104,9 @@ class NamespaceMeta(type):
         qn = None
         if "__qualname__" in nmspc:
             qn = nmspc["__qualname__"]
-            nmspc["__qualname__"] = qn+"Base"
+            nmspc["__qualname__"] = qn + "Base"
 
-        basecls = type.__new__(type, name+"Base", basebases, nmspc)
+        basecls = type.__new__(type, name + "Base", basebases, nmspc)
 
         conv_nmspc = mcls.make_namespace(basecls)
 
@@ -219,6 +219,7 @@ class NamespaceBase(object):
 # (this is the only common syntax for using metaclasses that works
 # with both py2 and py3)
 Namespace = NamespaceMeta.__new__(NamespaceMeta, "Namespace", (object,), {})
+
 
 class HierarchialNS(Namespace):
     def __init__(self):

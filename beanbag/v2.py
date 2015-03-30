@@ -10,10 +10,6 @@ from .bbexcept import BeanBagException
 from .attrdict import AttrDict
 
 import requests
-try:
-    from urlparse import urlparse, parse_qs
-except ImportError:
-    from urllib.parse import urlparse, parse_qs
 
 try:
     import json
@@ -63,7 +59,7 @@ class Request(AttrDict):
 class BeanBag(HierarchialNS):
     mime_json = "application/json"
 
-    def __init__(self, base_url, ext = "", session = None, use_attrdict=True):
+    def __init__(self, base_url, ext="", session=None, use_attrdict=True):
         """Create a BeanBag referencing a base REST path.
 
            :param base_url: the base URL prefix for all resources
@@ -90,7 +86,7 @@ class BeanBag(HierarchialNS):
            This function converts the user provided body object (or None
            when there is no body) into a requests.Request object, by
            encoding it as JSON string. (Note that the url and method
-           members of the Request are provided later by the 
+           members of the Request are provided later by the
 
            :param body: provided by the API user, usually a dict or None
         """
@@ -125,12 +121,12 @@ class BeanBag(HierarchialNS):
         res_content = response.headers.get("content-type", None)
         if res_content is None:
             pass
-        elif res_content.split(";",1)[0] == self.mime_json:
+        elif res_content.split(";", 1)[0] == self.mime_json:
             pass
         else:
             raise BeanBagException(response,
                     "Bad content-type in response (Content-Type: %s; wanted %s)"
-                                     % (res_content.split(";",1)[0],
+                                     % (res_content.split(";", 1)[0],
                                          self.mime_json))
         try:
             obj = json.loads(response.text or response.content)
@@ -155,8 +151,8 @@ class BeanBag(HierarchialNS):
         url, params = path
         url = self.baseurl(path)
         if params:
-            url = "%s?%s" % (url, ";".join("%s=%s" % (str(k),str(v))
-                        for k,v in params.items() if v is not None))
+            url = "%s?%s" % (url, ";".join("%s=%s" % (str(k), str(v))
+                        for k, v in params.items() if v is not None))
         return url
 
     def path(self):
@@ -187,7 +183,7 @@ class BeanBag(HierarchialNS):
         url, params = path
         newparams = params.copy()
         for a in tuple(args) + (kwargs,):
-            for k,v in a.items():
+            for k, v in a.items():
                 if v is not None:
                     newparams[k] = v
                 elif k in newparams:

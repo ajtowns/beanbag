@@ -31,6 +31,6 @@ class BeanBagException(Exception):
     def __str__(self):
         msg = self.msg
         if self.response and hasattr(self.response, "content"):
-          msg = "%s - response: %s" % (self.msg, self.response.content)
+            msg = "%s - response: %s" % (self.msg, self.response.content)
         return msg
 
