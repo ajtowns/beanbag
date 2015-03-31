@@ -115,6 +115,8 @@ class BeanBag(HierarchialNS):
         elif body is None:
             req = Request(data=None, headers={"Accept": self.mime_json})
         else:
+            if isinstance(body, AttrDict):
+                body = +body
             req = Request(data=json.dumps(body),
                     headers={"Accept": self.mime_json,
                         "Content-Type": self.mime_json})
