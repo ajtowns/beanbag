@@ -7,6 +7,8 @@ class AttrDict(namespace.SettableHierarchialNS):
     """Allow access to dictionary via attributes as well as
        array-style references."""
 
+    _notpresent = object()
+
     def __init__(self, base=None):
         """Provide an AttrDict view of a dictionary.
 
@@ -36,7 +38,7 @@ class AttrDict(namespace.SettableHierarchialNS):
                     base[p] = {}
                     base = base[p]
                 elif not create:
-                    return None
+                    return self._notpresent
                 else:
                     raise
         return base
@@ -51,13 +53,13 @@ class AttrDict(namespace.SettableHierarchialNS):
 
     def get(self, path):
         o = self.descend(path, create=False)
-        if isinstance(o, dict) or isinstance(o, list) or o is None:
+        if isinstance(o, dict) or isinstance(o, list) or o is self._notpresent:
             return self.namespace(path)
         else:
             return o
 
     def set(self, path, val):
-        o = self.descend(path[:-1])
+        o = self.descend(path[:-1], create=True)
         o[path[-1]] = val
 
     def delete(self, path):
