@@ -4,7 +4,7 @@
 # Written by Anthony Towns <aj@erisian.com.au>
 # See LICENSE file.
 
-__version__ = '1.9.2'
+__version__ = '1.9.3'
 
 from .v1 import *
 
