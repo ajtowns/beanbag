@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (c) 2014 Red Hat, Inc. and/or its affiliates.
 # Copyright (c) 2015 Anthony Towns
 # Written by Anthony Towns <aj@erisian.com.au>
