@@ -108,6 +108,8 @@ class NamespaceMeta(type):
             qn = nmspc["__qualname__"]
             nmspc["__qualname__"] = qn + "Base"
 
+            classcell = nmspc.pop('__classcell__', None)
+
         basecls = type.__new__(type, name + "Base", basebases, nmspc)
 
         conv_nmspc = mcls.make_namespace(basecls)
@@ -116,6 +118,8 @@ class NamespaceMeta(type):
             conv_nmspc["__module__"] = nmspc["__module__"]
         if qn is not None:
             conv_nmspc["__qualname__"] = qn
+        if classcell is  not None
+            conv_nmspc['__classcell__'] = classcell
 
         cls = type.__new__(mcls, name, bases, conv_nmspc)
         basecls.Namespace = cls
