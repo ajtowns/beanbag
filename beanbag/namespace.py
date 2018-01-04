@@ -104,6 +104,9 @@ class NamespaceMeta(type):
             basebases = (NamespaceBase,)
 
         qn = None
+
+        classcell = nmspc.pop('__classcell__', None)
+
         if "__qualname__" in nmspc:
             qn = nmspc["__qualname__"]
             nmspc["__qualname__"] = qn + "Base"
@@ -116,6 +119,8 @@ class NamespaceMeta(type):
             conv_nmspc["__module__"] = nmspc["__module__"]
         if qn is not None:
             conv_nmspc["__qualname__"] = qn
+        if classcell is not None:
+            conv_nmspc['__classcell__'] = classcell
 
         cls = type.__new__(mcls, name, bases, conv_nmspc)
         basecls.Namespace = cls
